@@ -17,7 +17,7 @@ function sharingGetNote(PDO $pdo, string $noteId): array
     $linkStmt = $pdo->prepare('SELECT * FROM share_tokens WHERE entity_type = "note" AND entity_id = ? ORDER BY created_at DESC LIMIT 1');
     $linkStmt->execute([$noteId]);
     $token = $linkStmt->fetch() ?: null;
-    return ['collaborators' => $items, 'link' => $token];
+    return ['collaborators' => $items, 'link' => $token, 'baseUrl' => baseUrl()];
 }
 
 function sharingSave(PDO $pdo, array $data): array

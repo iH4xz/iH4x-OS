@@ -51,7 +51,13 @@
         document.getElementById('sharePeople').innerHTML = people || '<p class="state-text">-</p>';
 
         const linkToken = payload.link && payload.link.token ? payload.link.token : '';
-        const linkUrl = linkToken ? (location.origin + location.pathname.replace(/[^/]+$/, '') + 'login.php?share=' + encodeURIComponent(linkToken)) : '';
+        let base = payload.baseUrl;
+        if (base) {
+            base = base.replace(/\/+$/, '');
+        } else {
+            base = (location.origin + location.pathname.replace(/[^/]+$/, '')).replace(/\/+$/, '');
+        }
+        const linkUrl = linkToken ? (base + '/login.php?share=' + encodeURIComponent(linkToken)) : '';
         document.getElementById('shareLink').innerHTML = `
             <label class="collaborator-row"><input type="checkbox" id="shareEnableLink" ${linkToken ? 'checked' : ''}> ${esc(iH4x.t('share.enable_link'))}</label>
             <div class="share-link-row"><input id="shareLinkInput" value="${esc(linkUrl)}" readonly><button class="btn-ghost" id="copyShareLink">${esc(iH4x.t('share.copy_link'))}</button></div>`;
