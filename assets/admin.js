@@ -81,6 +81,7 @@
         if (user) panel.querySelector('[name="role_id"]').value = user.role_id;
         panel.classList.add('visible');
         if (window.lucide) lucide.createIcons();
+        if (iH4x.initPasswordToggles) iH4x.initPasswordToggles();
     }
 
     function openInvite() {

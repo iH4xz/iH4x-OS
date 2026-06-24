@@ -39,6 +39,8 @@
             'action.settings':         'Settings',
             'action.toggle_list':      'Toggle list view',
             'action.toggle_lang':      'Toggle language',
+            'action.show_password':    'Show password',
+            'action.hide_password':    'Hide password',
             'action.toggle_sidebar':   'Toggle sidebar',
             'action.add_folder':       'Add folder',
             'action.add_subfolder':    'Add subfolder',
@@ -350,6 +352,8 @@
             'action.settings':         'الإعدادات',
             'action.toggle_list':      'تبديل العرض',
             'action.toggle_lang':      'تبديل اللغة',
+            'action.show_password':    'عرض كلمة المرور',
+            'action.hide_password':    'إخفاء كلمة المرور',
             'action.toggle_sidebar':   'إظهار/إخفاء الشريط الجانبي',
             'action.add_folder':       'إضافة مجلد',
             'action.add_subfolder':    'إضافة مجلد فرعي',
@@ -1177,6 +1181,59 @@
         }
     }
 
+    function initPasswordToggles() {
+        document.querySelectorAll('input[type="password"]').forEach((input) => {
+            if (input.parentNode.querySelector('.password-toggle-btn')) return;
+            
+            let wrap = input.parentNode;
+            if (!wrap.classList.contains('password-input-wrap')) {
+                wrap = document.createElement('div');
+                wrap.className = 'password-input-wrap';
+                wrap.style.position = 'relative';
+                wrap.style.display = 'flex';
+                wrap.style.alignItems = 'center';
+                wrap.style.width = '100%';
+                
+                input.parentNode.insertBefore(wrap, input);
+                wrap.appendChild(input);
+            }
+            
+            input.style.paddingInlineEnd = '38px';
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'password-toggle-btn';
+            btn.style.position = 'absolute';
+            btn.style.insetInlineEnd = '10px';
+            btn.style.background = 'none';
+            btn.style.border = 'none';
+            btn.style.color = 'var(--text-soft)';
+            btn.style.cursor = 'pointer';
+            btn.style.padding = '0';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.zIndex = '10';
+            
+            const eyeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z"/><circle cx="12" cy="12" r="3"/></svg>`;
+            const eyeOffSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+            
+            btn.innerHTML = eyeSvg;
+            btn.title = t('action.show_password') || 'Show password';
+            btn.setAttribute('aria-label', btn.title);
+            
+            btn.addEventListener('click', () => {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                btn.innerHTML = isPassword ? eyeOffSvg : eyeSvg;
+                btn.title = isPassword ? (t('action.hide_password') || 'Hide password') : (t('action.show_password') || 'Show password');
+                btn.setAttribute('aria-label', btn.title);
+            });
+            
+            wrap.appendChild(btn);
+        });
+    }
+
     /* =====================================================================
        Boot
        ===================================================================== */
@@ -1195,6 +1252,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         setupDayjs();
         applyDomI18n(); // re-apply once DOM is fully ready
+        initPasswordToggles();
         if (window.lucide && window.lucide.createIcons) {
             try { window.lucide.createIcons(); } catch (_) {}
         }
@@ -1228,5 +1286,6 @@
         escapeHtml,
         userInitials,
         userColor,
+        initPasswordToggles,
     };
 })();
