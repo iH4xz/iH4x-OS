@@ -1,0 +1,76 @@
+/* sharing.css - share panel, badges and backlinks */
+.share-panel {
+    width: min(420px, 94vw);
+}
+.share-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.share-title {
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+}
+.collaborator-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+.access-select {
+    min-height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 4px 8px;
+}
+.share-link-row {
+    display: flex;
+    gap: 8px;
+}
+.share-link-row input {
+    flex: 1;
+    min-width: 0;
+    min-height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 7px 10px;
+}
+.share-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-soft);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+}
+.folder-shared-icon {
+    margin-inline-start: 6px;
+    color: var(--text-soft);
+    display: inline-flex;
+}
+.backlinks {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.backlinks h4 {
+    margin-bottom: 8px;
+    color: var(--text-soft);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.backlinks-list {
+    display: grid;
+    gap: 6px;
+}
+

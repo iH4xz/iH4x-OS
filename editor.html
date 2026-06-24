@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iH4x Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link id="hljs-dark"  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github-dark.min.css">
+    <link id="hljs-light" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github.min.css" disabled>
+    <link rel="stylesheet" href="assets/sharing.css">
+    <link rel="stylesheet" href="assets/presence.css">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/relativeTime.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/locale/ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/index.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+<body class="editor-body">
+
+<div class="editor-shell" id="editorShell">
+    <div class="editor-toolbar">
+        <button class="btn-back" type="button" onclick="if (window.parent !== window) { window.parent.postMessage({ type: 'ih4x:editor-back' }, '*'); } else { location.href='app.html'; }" data-i18n-attr="aria-label:toolbar.back">
+            <i data-lucide="arrow-left"></i> <span data-i18n="toolbar.back">Back</span>
+        </button>
+        <input type="text" id="titleInput" class="title-input" data-i18n-attr="placeholder:toolbar.title_placeholder,aria-label:toolbar.title_aria" />
+
+        <div class="toolbar-divider"></div>
+
+        <button class="btn-toolbar" id="pinBtn" data-i18n-attr="title:toolbar.pin,aria-label:toolbar.pin">
+            <i data-lucide="pin"></i>
+        </button>
+        <button class="btn-toolbar" id="favBtn" data-i18n-attr="title:toolbar.fav,aria-label:toolbar.fav">
+            <i data-lucide="heart"></i>
+        </button>
+        <button class="btn-toolbar" id="colorBtn" data-i18n-attr="title:toolbar.color,aria-label:toolbar.color">
+            <span class="color-dot" id="colorDotPreview" style="background: #6b7280"></span>
+        </button>
+        <button class="btn-toolbar" id="tagsBtn" data-i18n-attr="title:toolbar.tags,aria-label:toolbar.tags">
+            <i data-lucide="tag"></i> <span id="tagsCount">0</span>
+        </button>
+
+        <div class="toolbar-divider"></div>
+
+        <span class="status" id="status" data-i18n="status.ready">Ready</span>
+        <span class="status" id="wordCount" style="background: transparent"></span>
+
+        <span class="toolbar-spacer"></span>
+
+        <button class="btn-toolbar" id="outlineBtn" data-i18n-attr="title:toolbar.outline,aria-label:toolbar.outline">
+            <i data-lucide="list-tree"></i>
+        </button>
+        <button class="btn-toolbar" id="focusBtn" data-i18n-attr="title:toolbar.focus,aria-label:toolbar.focus">
+            <i data-lucide="focus"></i>
+        </button>
+        <button class="btn-toolbar" id="moreBtn" data-i18n-attr="title:toolbar.more,aria-label:toolbar.more">
+            <i data-lucide="more-horizontal"></i>
+        </button>
+        <button class="btn-toolbar" id="shareBtn" data-i18n-attr="title:share.title,aria-label:share.title"><i data-lucide="users"></i></button>
+        <div class="remote-update-banner" id="remoteUpdateBanner">
+            <span id="remoteUpdateText" data-i18n="editor.remote_updated">Updated remotely</span>
+            <button type="button" id="remoteReloadBtn" data-i18n="editor.reload">Reload</button>
+        </div>
+        <div class="presence-avatars" id="presenceAvatars"></div>
+        <span class="typing-label" id="typingLabel"></span>
+    </div>
+
+    <div class="editor-main">
+        <div class="editor-scroll" id="editorScroll">
+            <div id="editor" class="editor-canvas" contenteditable="true" spellcheck="true" data-i18n-attr="aria-label:toolbar.editor_aria"></div>
+        </div>
+        <aside class="outline" id="outline" data-i18n-attr="aria-label:toolbar.outline">
+            <div class="outline-title" data-i18n="toolbar.outline_title">On this page</div>
+            <div id="outlineList"></div>
+        </aside>
+    </div>
+</div>
+
+<!-- Color popover -->
+<div class="popover" id="colorPopover" role="dialog" data-i18n-attr="aria-label:color.title">
+    <div class="popover-title" data-i18n="color.title">Card color</div>
+    <div class="color-row" id="colorRow">
+        <span class="color-dot color-slate"   data-color="slate"   style="background:#6b7280"></span>
+        <span class="color-dot color-rose"    data-color="rose"    style="background:#f43f5e"></span>
+        <span class="color-dot color-amber"   data-color="amber"   style="background:#f59e0b"></span>
+        <span class="color-dot color-emerald" data-color="emerald" style="background:#10b981"></span>
+        <span class="color-dot color-sky"     data-color="sky"     style="background:#0ea5e9"></span>
+        <span class="color-dot color-violet"  data-color="violet"  style="background:#8b5cf6"></span>
+    </div>
+</div>
+
+<!-- Tags popover -->
+<div class="popover" id="tagsPopover" role="dialog" data-i18n-attr="aria-label:tag.title">
+    <div class="popover-title" data-i18n="tag.title">Tags</div>
+    <div id="tagChipsHost" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;max-width:260px"></div>
+    <input type="text" class="tag-input" id="tagInput" data-i18n-attr="placeholder:tag.placeholder" style="width:240px;border:1px solid var(--border);border-radius:7px;padding:6px 9px" />
+</div>
+
+<!-- More menu -->
+<div class="popover" id="moreMenu" role="menu" data-i18n-attr="aria-label:toolbar.more" style="min-width:230px;padding:6px">
+    <button class="menu-item" data-act="export-md"><span class="menu-icon"><i data-lucide="file-text"></i></span><span data-i18n="more.export_md">Export Markdown</span></button>
+    <button class="menu-item" data-act="export-html"><span class="menu-icon"><i data-lucide="file-code"></i></span><span data-i18n="more.export_html">Export HTML</span></button>
+    <button class="menu-item" data-act="export-txt"><span class="menu-icon"><i data-lucide="file"></i></span><span data-i18n="more.export_txt">Export Plain text</span></button>
+    <button class="menu-item" data-act="duplicate"><span class="menu-icon"><i data-lucide="copy"></i></span><span data-i18n="more.duplicate">Duplicate</span></button>
+    <button class="menu-item" data-act="versions"><span class="menu-icon"><i data-lucide="history"></i></span><span data-i18n="more.versions">Version history</span></button>
+    <button class="menu-item" data-act="shortcuts"><span class="menu-icon"><i data-lucide="keyboard"></i></span><span data-i18n="more.shortcuts">Keyboard shortcuts</span></button>
+    <button class="menu-item" data-act="trash" style="color:var(--danger)"><span class="menu-icon"><i data-lucide="trash-2"></i></span><span data-i18n="more.trash">Move to trash</span></button>
+</div>
+
+<!-- Slash menu -->
+<div id="slash-menu" class="slash-menu" role="listbox" data-i18n-attr="aria-label:slash.aria">
+    <input class="slash-search" id="slashSearch" data-i18n-attr="placeholder:slash.placeholder" />
+    <div class="slash-list" id="slashList"></div>
+</div>
+
+<!-- Bubble menu -->
+<div class="bubble-menu" id="bubbleMenu" role="toolbar" data-i18n-attr="aria-label:editor.format">
+    <button data-cmd="bold"      data-i18n-attr="title:format.bold"><i data-lucide="bold"></i></button>
+    <button data-cmd="italic"    data-i18n-attr="title:format.italic"><i data-lucide="italic"></i></button>
+    <button data-cmd="underline" data-i18n-attr="title:format.underline"><i data-lucide="underline"></i></button>
+    <button data-cmd="strike"    data-i18n-attr="title:format.strikethrough"><i data-lucide="strikethrough"></i></button>
+    <button data-cmd="code"      data-i18n-attr="title:format.inline_code"><i data-lucide="code"></i></button>
+    <button data-cmd="link"      data-i18n-attr="title:format.link"><i data-lucide="link"></i></button>
+</div>
+
+<!-- Versions drawer -->
+<div class="drawer" id="versionsDrawer" aria-hidden="true">
+    <div class="drawer-head">
+        <h3 data-i18n="versions.title">Version history</h3>
+        <button class="icon-btn" id="closeVersions" data-i18n-attr="aria-label:versions.close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer-body" id="versionsList"></div>
+    <div class="version-preview" id="versionPreview" style="display:none"></div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <button class="btn-ghost" id="cancelVersion" style="flex:1" data-i18n="versions.close">Close</button>
+        <button class="btn-primary" id="restoreVersion" style="flex:1" disabled data-i18n="versions.restore">Restore</button>
+    </div>
+</div>
+
+<input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+<div class="backlinks" id="backlinks" style="display:none">
+    <h4 data-i18n="editor.linked_from">Linked from</h4>
+    <div class="backlinks-list" id="backlinksList"></div>
+</div>
+
+<script>
+(function () {
+    const $ = (s, r = document) => r.querySelector(s);
+    const editor = $('#editor');
+    const titleInput = $('#titleInput');
+    const status = $('#status');
+    const wordCountEl = $('#wordCount');
+    const slashMenu = $('#slash-menu');
+    const slashList = $('#slashList');
+    const slashSearch = $('#slashSearch');
+    const bubbleMenu = $('#bubbleMenu');
+    const colorPopover = $('#colorPopover');
+    const tagsPopover = $('#tagsPopover');
+    const moreMenu = $('#moreMenu');
+    const tagInput = $('#tagInput');
+    const tagChipsHost = $('#tagChipsHost');
+    const outline = $('#outline');
+    const outlineList = $('#outlineList');
+    const editorShell = $('#editorShell');
+    const versionsDrawer = $('#versionsDrawer');
+    const imageInput = $('#imageInput');
+    const shareBtn = $('#shareBtn');
+    const remoteUpdateBanner = $('#remoteUpdateBanner');
+    const remoteReloadBtn = $('#remoteReloadBtn');
+    const presenceAvatars = $('#presenceAvatars');
+    const typingLabel = $('#typingLabel');
+    const backlinks = $('#backlinks');
+    const backlinksList = $('#backlinksList');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentNoteId = urlParams.get('id') || null;
+
+    const meta = {
+        title: 'Untitled',
+        tags: [],
+        color: 'slate',
+        pinned: false,
+        favorite: false,
+        archived: false,
+        updatedAt: null,
+    };
+
+    let saveTimeout, statusTimer, lastSavedAt = null, isLoaded = false;
+    let slashAnchorRange = null, activeSlashIdx = 0;
+    let selectedVersionTs = null;
+    let currentUser = null;
+
+    /* ===== Status ===== */
+    function setStatus(text, kind = 'ok') {
+        status.classList.remove('saving', 'error');
+        if (kind === 'saving') status.classList.add('saving');
+        if (kind === 'error') status.classList.add('error');
+        status.textContent = text;
+    }
+    function refreshStatus() {
+        if (!lastSavedAt) return;
+        if (status.classList.contains('saving') || status.classList.contains('error')) return;
+        setStatus(iH4x.t('status.saved_rel', { time: iH4x.relTime(lastSavedAt) }));
+    }
+    setInterval(refreshStatus, 30000);
+
+    /* ===== Word count ===== */
+    function updateWordCount() {
+        const text = editor.innerText.trim();
+        const words = text ? text.split(/\s+/).length : 0;
+        const chars = text.length;
+        wordCountEl.textContent = iH4x.t('status.words_chars', { w: words, c: chars });
+    }
+
+    /* ===== Save ===== */
+    async function saveNow() {
+        if (!isLoaded) return;
+        try {
+            setStatus(iH4x.t('status.saving'), 'saving');
+            const html = iH4x.sanitize(editor.innerHTML);
+            const payload = await iH4x.fetchJson('api.php?action=save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: currentNoteId,
+                    title: titleInput.value.trim() || iH4x.t('toolbar.title_placeholder'),
+                    content: html,
+                    tags: meta.tags,
+                    color: meta.color,
+                })
+            });
+            currentNoteId = payload.id;
+            if (payload.meta) {
+                meta.updatedAt = payload.meta.updatedAt;
+            }
+            lastSavedAt = new Date();
+            setStatus(iH4x.t('status.saved_rel', { time: iH4x.t('status.just_now') }));
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'ih4x:note-saved', id: currentNoteId }, '*');
+            }
+            if (history.replaceState && !urlParams.get('id')) {
+                const u = new URL(location.href);
+                u.searchParams.set('id', currentNoteId);
+                history.replaceState({}, '', u.toString());
+            }
+        } catch (err) {
+            setStatus(iH4x.t('status.error_save'), 'error');
+            iH4x.toast(iH4x.t('toast.save_failed', { msg: err.message }), { type: 'error', action: { label: iH4x.t('toast.retry'), onClick: saveNow } });
+        }
+    }
+    function queueSave() {
+        setStatus(iH4x.t('status.typing'), 'saving');
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveNow, 800);
+    }
+
+    async function patchMeta(patch) {
+        if (!currentNoteId) return;
+        try {
+            await iH4x.fetchJson('api.php?action=patch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.assign({ id: currentNoteId }, patch))
+            });
+        } catch (err) {
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+
+    /* ===== Toolbar buttons ===== */
+    function refreshToolbar() {
+        $('#pinBtn').classList.toggle('active', meta.pinned);
+        const fav = $('#favBtn');
+        fav.classList.toggle('active', meta.favorite);
+        fav.classList.toggle('fav-on', meta.favorite);
+        const colors = { slate:'#6b7280', rose:'#f43f5e', amber:'#f59e0b', emerald:'#10b981', sky:'#0ea5e9', violet:'#8b5cf6' };
+        $('#colorDotPreview').style.background = colors[meta.color] || '#6b7280';
+        $('#tagsCount').textContent = meta.tags.length;
+        renderTagChips();
+    }
+
+    $('#pinBtn').addEventListener('click', async () => { meta.pinned = !meta.pinned; refreshToolbar(); await patchMeta({ pinned: meta.pinned }); });
+    $('#favBtn').addEventListener('click', async () => { meta.favorite = !meta.favorite; refreshToolbar(); await patchMeta({ favorite: meta.favorite }); });
+
+    function showPopover(el, anchor) {
+        document.querySelectorAll('.popover.visible').forEach(p => p.classList.remove('visible'));
+        el.style.visibility = 'hidden';
+        el.classList.add('visible');
+        const rect = anchor.getBoundingClientRect();
+        const popW = el.offsetWidth || 220;
+        const popH = el.offsetHeight || 180;
+        const margin = 10;
+        let left = rect.left + window.scrollX;
+        if (left + popW > window.innerWidth - margin) {
+            left = Math.max(margin, rect.right + window.scrollX - popW);
+        }
+        let top = rect.bottom + window.scrollY + 6;
+        if (top + popH > window.innerHeight + window.scrollY - margin) {
+            top = Math.max(margin, rect.top + window.scrollY - popH - 6);
+        }
+        el.style.left = left + 'px';
+        el.style.top  = top  + 'px';
+        el.style.visibility = '';
+    }
+
+    $('#colorBtn').addEventListener('click', (e) => { e.stopPropagation(); showPopover(colorPopover, $('#colorBtn')); });
+    $('#colorRow').addEventListener('click', async (e) => {
+        const dot = e.target.closest('[data-color]');
+        if (!dot) return;
+        meta.color = dot.dataset.color;
+        refreshToolbar();
+        colorPopover.classList.remove('visible');
+        await patchMeta({ color: meta.color });
+    });
+
+    $('#tagsBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showPopover(tagsPopover, $('#tagsBtn'));
+        setTimeout(() => tagInput.focus(), 30);
+    });
+    function renderTagChips() {
+        tagChipsHost.innerHTML = '';
+        meta.tags.forEach((t, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            chip.style.cursor = 'pointer';
+            chip.innerHTML = `#${iH4x.escapeHtml(t)} <span style="margin-left:4px;color:var(--text-soft)">×</span>`;
+            chip.title = '×';
+            chip.addEventListener('click', async () => {
+                meta.tags.splice(i, 1);
+                refreshToolbar();
+                await patchMeta({ tags: meta.tags });
+            });
+            tagChipsHost.appendChild(chip);
+        });
+    }
+    tagInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const v = tagInput.value.trim().replace(/[^\p{L}\p{N}_\- ]/gu, '');
+            if (v && !meta.tags.includes(v)) {
+                meta.tags.push(v);
+                refreshToolbar();
+                await patchMeta({ tags: meta.tags });
+            }
+            tagInput.value = '';
+        } else if (e.key === 'Escape') {
+            tagsPopover.classList.remove('visible');
+        }
+    });
+
+    /* ===== More menu ===== */
+    $('#moreBtn').addEventListener('click', (e) => { e.stopPropagation(); showPopover(moreMenu, $('#moreBtn')); });
+    moreMenu.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        moreMenu.classList.remove('visible');
+        const act = btn.dataset.act;
+        if (act.startsWith('export-')) {
+            if (!currentNoteId) { iH4x.toast(iH4x.t('toast.save_first'), { type: 'info' }); return; }
+            await saveNow();
+            const fmt = act.replace('export-', '');
+            window.open('api.php?action=export&format=' + fmt + '&id=' + encodeURIComponent(currentNoteId), '_blank');
+        } else if (act === 'duplicate') {
+            if (!currentNoteId) return;
+            try {
+                const r = await iH4x.fetchJson('api.php?action=duplicate&id=' + encodeURIComponent(currentNoteId), { method: 'POST' });
+                if (window.parent !== window) window.parent.postMessage({ type: 'ih4x:open-note', id: r.id }, '*');
+                else location.href = 'app.html#note/' + encodeURIComponent(r.id);
+            } catch (err) { iH4x.toast(err.message, { type: 'error' }); }
+        } else if (act === 'versions') {
+            openVersions();
+        } else if (act === 'shortcuts') {
+            showShortcuts();
+        } else if (act === 'trash') {
+            if (!currentNoteId) { if (window.parent !== window) window.parent.postMessage({ type: 'ih4x:editor-back' }, '*'); else location.href = 'app.html'; return; }
+            const ok = await iH4x.confirmModal({ title: iH4x.t('confirm.trash_title'), okLabel: iH4x.t('confirm.trash_ok'), danger: true });
+            if (!ok) return;
+            try {
+                await iH4x.fetchJson('api.php?action=delete&id=' + encodeURIComponent(currentNoteId), { method: 'POST' });
+                if (window.parent !== window) window.parent.postMessage({ type: 'ih4x:editor-back' }, '*');
+                else location.href = 'app.html';
+            } catch (err) { iH4x.toast(err.message, { type: 'error' }); }
+        }
+    });
+
+    function showShortcuts() {
+        iH4x.openShortcuts([
+            { title: iH4x.t('shortcuts.section_general'), rows: [
+                { label: iH4x.t('shortcuts.save'),    keys: ['Ctrl', 'S'] },
+                { label: iH4x.t('shortcuts.palette'), keys: ['Ctrl', 'K'] },
+            ]},
+            { title: iH4x.t('shortcuts.section_format'), rows: [
+                { label: iH4x.t('shortcuts.bold'),      keys: ['Ctrl', 'B'] },
+                { label: iH4x.t('shortcuts.italic'),    keys: ['Ctrl', 'I'] },
+                { label: iH4x.t('shortcuts.underline'), keys: ['Ctrl', 'U'] },
+                { label: iH4x.t('shortcuts.link'),     keys: ['Ctrl', 'K'] },
+                { label: iH4x.t('shortcuts.headings'), keys: ['Ctrl', 'Shift', '1/2/3'] },
+                { label: iH4x.t('shortcuts.lists'),    keys: ['Ctrl', 'Shift', '7/8/9'] },
+            ]},
+            { title: iH4x.t('shortcuts.section_view'), rows: [
+                { label: iH4x.t('shortcuts.outline'), keys: ['Ctrl', 'E'] },
+                { label: iH4x.t('shortcuts.focus'),   keys: ['Ctrl', 'Shift', '.'] },
+                { label: iH4x.t('shortcuts.slash'),   keys: ['/'], alt: ['\\'] },
+            ]},
+            { title: iH4x.t('shortcuts.section_markdown'), rows: [
+                { label: iH4x.t('slash.h1') + ' / ' + iH4x.t('slash.h2') + ' / ' + iH4x.t('slash.h3'),
+                                                  keys: ['#', '##', '###'] },
+                { label: iH4x.t('slash.ul'),      keys: ['-'], alt: ['*'] },
+                { label: iH4x.t('slash.ol'),      keys: ['1', '.'] },
+                { label: iH4x.t('slash.todo'),    keys: ['[', ']'] },
+                { label: iH4x.t('slash.quote'),   keys: ['>'] },
+                { label: iH4x.t('slash.code'),    keys: ['`', '`', '`'] },
+                { label: iH4x.t('slash.divider'), keys: ['-', '-', '-'] },
+            ]},
+        ]);
+    }
+
+    document.addEventListener('click', (e) => {
+        document.querySelectorAll('.popover.visible').forEach(p => {
+            if (!p.contains(e.target)) p.classList.remove('visible');
+        });
+    });
+
+    /* ===== Outline ===== */
+    function buildOutline() {
+        outlineList.innerHTML = '';
+        const headings = editor.querySelectorAll('h1, h2, h3');
+        if (headings.length === 0) {
+            outlineList.innerHTML = '<div class="outline-item" style="opacity:0.6">' + iH4x.escapeHtml(iH4x.t('toolbar.outline_empty')) + '</div>';
+            return;
+        }
+        headings.forEach((h, idx) => {
+            if (!h.id) h.id = 'h-' + idx + '-' + Math.random().toString(36).slice(2, 7);
+            const el = document.createElement('div');
+            el.className = 'outline-item ' + h.tagName.toLowerCase();
+            el.textContent = h.textContent || '(empty)';
+            el.dataset.id = h.id;
+            el.addEventListener('click', () => h.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+            outlineList.appendChild(el);
+        });
+    }
+    $('#outlineBtn').addEventListener('click', () => outline.classList.toggle('collapsed'));
+
+    /* ===== Focus mode ===== */
+    $('#focusBtn').addEventListener('click', () => {
+        editorShell.classList.toggle('focus-mode');
+        document.body.classList.toggle('focus-mode');
+    });
+
+    /* ===== Title ===== */
+    titleInput.addEventListener('input', queueSave);
+
+    /* ===== Editor input ===== */
+    editor.addEventListener('input', () => {
+        handleMarkdownShortcut();
+        const lineText = getActiveLineText();
+        const last = lineText.slice(-1);
+        if (last === '/' || last === '\\') {
+            showSlashMenu();
+        } else {
+            hideSlashMenu();
+        }
+        queueSave();
+        updateWordCount();
+        scheduleOutline();
+    });
+
+    let outlineTimer;
+    function scheduleOutline() {
+        clearTimeout(outlineTimer);
+        outlineTimer = setTimeout(buildOutline, 400);
+    }
+
+    /* ===== Selection bubble ===== */
+    function updateBubble() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) {
+            bubbleMenu.classList.remove('visible');
+            return;
+        }
+        if (!editor.contains(sel.anchorNode)) { bubbleMenu.classList.remove('visible'); return; }
+        const rect = sel.getRangeAt(0).getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) { bubbleMenu.classList.remove('visible'); return; }
+        bubbleMenu.classList.add('visible');
+        bubbleMenu.style.top = (rect.top + window.scrollY - bubbleMenu.offsetHeight - 8) + 'px';
+        bubbleMenu.style.left = (rect.left + window.scrollX + rect.width / 2 - bubbleMenu.offsetWidth / 2) + 'px';
+        bubbleMenu.querySelectorAll('button').forEach(b => {
+            const cmd = b.dataset.cmd;
+            const map = { bold: 'bold', italic: 'italic', underline: 'underline', strike: 'strikeThrough' };
+            if (map[cmd]) b.classList.toggle('active', document.queryCommandState(map[cmd]));
+        });
+    }
+    document.addEventListener('selectionchange', updateBubble);
+    bubbleMenu.addEventListener('mousedown', (e) => e.preventDefault());
+    bubbleMenu.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-cmd]');
+        if (!btn) return;
+        const cmd = btn.dataset.cmd;
+        if (cmd === 'bold') document.execCommand('bold');
+        else if (cmd === 'italic') document.execCommand('italic');
+        else if (cmd === 'underline') document.execCommand('underline');
+        else if (cmd === 'strike') document.execCommand('strikeThrough');
+        else if (cmd === 'code') wrapInline('code');
+        else if (cmd === 'link') {
+            const url = prompt('Link URL:');
+            if (url) document.execCommand('createLink', false, url);
+        }
+        queueSave();
+    });
+    function wrapInline(tag) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        const text = range.toString();
+        if (!text) return;
+        const node = document.createElement(tag);
+        node.textContent = text;
+        range.deleteContents();
+        range.insertNode(node);
+        sel.removeAllRanges();
+        const r = document.createRange();
+        r.setStartAfter(node);
+        r.collapse(true);
+        sel.addRange(r);
+    }
+
+    /* ===== Slash menu ===== */
+    function getSlashItems() {
+        return [
+            { id: 'h1',     label: iH4x.t('slash.h1'),     icon: 'heading-1',     shortcut: 'Ctrl+Shift+1', keys: ['heading','title','h1','عنوان'] },
+            { id: 'h2',     label: iH4x.t('slash.h2'),     icon: 'heading-2',     shortcut: 'Ctrl+Shift+2', keys: ['heading','h2','sub','عنوان'] },
+            { id: 'h3',     label: iH4x.t('slash.h3'),     icon: 'heading-3',     shortcut: 'Ctrl+Shift+3', keys: ['heading','h3','عنوان'] },
+            { id: 'p',      label: iH4x.t('slash.text'),   icon: 'pilcrow',                              keys: ['paragraph','text','plain','نص'] },
+            { id: 'ul',     label: iH4x.t('slash.ul'),     icon: 'list',          shortcut: 'Ctrl+Shift+8', keys: ['list','bullet','ul','قائمة'] },
+            { id: 'ol',     label: iH4x.t('slash.ol'),     icon: 'list-ordered',  shortcut: 'Ctrl+Shift+7', keys: ['list','numbered','ol','قائمة'] },
+            { id: 'todo',   label: iH4x.t('slash.todo'),   icon: 'check-square',  shortcut: 'Ctrl+Shift+9', keys: ['todo','task','checkbox','مهمة'] },
+            { id: 'quote',  label: iH4x.t('slash.quote'),  icon: 'quote',                                keys: ['quote','blockquote','اقتباس'] },
+            { id: 'code',   label: iH4x.t('slash.code'),   icon: 'code',                                 keys: ['code','snippet','pre','كود'] },
+            { id: 'divider',label: iH4x.t('slash.divider'),icon: 'minus',                                keys: ['divider','hr','line','فاصل'] },
+            { id: 'image',  label: iH4x.t('slash.image'),  icon: 'image',                                keys: ['image','picture','photo','صورة'] },
+            { id: 'table',  label: iH4x.t('slash.table'),  icon: 'table',                                keys: ['table','grid','جدول'] },
+            { id: 'callout',label: iH4x.t('slash.callout'),icon: 'message-square',                       keys: ['callout','note','info','تنبيه'] },
+        ];
+    }
+    let slashItems = getSlashItems();
+
+    function showSlashMenu() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        slashAnchorRange = sel.getRangeAt(0).cloneRange();
+        const r = slashAnchorRange.cloneRange();
+        r.collapse(true);
+        const rect = r.getBoundingClientRect();
+        slashMenu.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+        slashMenu.style.left = (rect.left + window.scrollX) + 'px';
+        slashMenu.classList.add('visible');
+        slashSearch.value = '';
+        activeSlashIdx = 0;
+        renderSlashList(slashItems);
+    }
+    function hideSlashMenu() {
+        slashMenu.classList.remove('visible');
+    }
+    function renderSlashList(items) {
+        slashList.innerHTML = '';
+        items.forEach((it, idx) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'menu-item' + (idx === activeSlashIdx ? ' active' : '');
+            b.dataset.action = it.id;
+            b.setAttribute('role', 'option');
+            b.innerHTML = `
+                <span class="menu-icon"><i data-lucide="${it.icon}"></i></span>
+                <span>${it.label}</span>
+                ${it.shortcut ? `<span class="menu-shortcut">${it.shortcut}</span>` : ''}
+            `;
+            b.addEventListener('click', () => applySlash(it.id));
+            slashList.appendChild(b);
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+    slashSearch.addEventListener('input', () => {
+        const q = slashSearch.value.trim().toLowerCase();
+        const filtered = slashItems.filter(it => !q || it.label.toLowerCase().includes(q) || it.keys.some(k => k.includes(q)));
+        activeSlashIdx = 0;
+        renderSlashList(filtered);
+    });
+    slashSearch.addEventListener('keydown', (e) => {
+        const items = slashList.querySelectorAll('.menu-item');
+        if (e.key === 'ArrowDown') { e.preventDefault(); activeSlashIdx = Math.min(items.length - 1, activeSlashIdx + 1); refreshActive(items); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); activeSlashIdx = Math.max(0, activeSlashIdx - 1); refreshActive(items); }
+        else if (e.key === 'Enter') { e.preventDefault(); const a = items[activeSlashIdx]; if (a) applySlash(a.dataset.action); }
+        else if (e.key === 'Escape') { e.preventDefault(); hideSlashMenu(); editor.focus(); }
+    });
+    function refreshActive(items) {
+        items.forEach((it, i) => it.classList.toggle('active', i === activeSlashIdx));
+        const el = items[activeSlashIdx];
+        if (el) el.scrollIntoView({ block: 'nearest' });
+    }
+
+    function removeTrailingSlash() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        const node = range.startContainer;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return;
+        const offset = range.startOffset;
+        const text = node.textContent || '';
+        if (offset > 0 && (text[offset - 1] === '/' || text[offset - 1] === '\\')) {
+            node.textContent = text.slice(0, offset - 1) + text.slice(offset);
+            const r = document.createRange();
+            r.setStart(node, offset - 1);
+            r.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(r);
+        }
+    }
+
+    function applySlash(action) {
+        if (slashAnchorRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(slashAnchorRange);
+        }
+        editor.focus();
+        removeTrailingSlash();
+        applyBlock(action);
+        hideSlashMenu();
+        queueSave();
+    }
+
+    function applyBlock(type) {
+        switch (type) {
+            case 'h1': document.execCommand('formatBlock', false, 'h1'); break;
+            case 'h2': document.execCommand('formatBlock', false, 'h2'); break;
+            case 'h3': document.execCommand('formatBlock', false, 'h3'); break;
+            case 'p':  document.execCommand('formatBlock', false, 'p');  break;
+            case 'ul': document.execCommand('insertUnorderedList'); break;
+            case 'ol': document.execCommand('insertOrderedList');   break;
+            case 'todo': insertTodo(); break;
+            case 'quote': document.execCommand('formatBlock', false, 'blockquote'); break;
+            case 'code': insertCodeBlock(); break;
+            case 'divider': insertHTMLAtCaret('<hr><p><br></p>'); break;
+            case 'image': imageInput.click(); break;
+            case 'table': insertTable(3, 3); break;
+            case 'callout': insertHTMLAtCaret('<div class="callout">' + iH4x.escapeHtml(iH4x.t('editor.highlight')) + '</div><p><br></p>'); break;
+        }
+    }
+
+    function insertHTMLAtCaret(html) {
+        document.execCommand('insertHTML', false, iH4x.sanitize(html));
+    }
+
+    function insertTodo() {
+        insertHTMLAtCaret('<ul class="todo-list" style="list-style:none;padding-left:0"><li class="todo-item"><input type="checkbox"> <span>Task</span></li></ul>');
+    }
+
+    function insertCodeBlock() {
+        const lang = prompt('Language (e.g. js, py, html) — leave blank for plain', 'js') || '';
+        insertHTMLAtCaret(`<pre><code class="language-${iH4x.escapeHtml(lang)}">code…</code></pre><p><br></p>`);
+        if (window.hljs) editor.querySelectorAll('pre code').forEach(b => { try { hljs.highlightElement(b); } catch(_){} });
+    }
+
+    function insertTable(rows, cols) {
+        let html = '<table>';
+        for (let r = 0; r < rows; r++) {
+            html += '<tr>';
+            for (let c = 0; c < cols; c++) {
+                html += r === 0 ? '<th>Header</th>' : '<td>Cell</td>';
+            }
+            html += '</tr>';
+        }
+        html += '</table><p><br></p>';
+        insertHTMLAtCaret(html);
+    }
+
+    /* ===== Markdown shortcuts ===== */
+    function getActiveLineText() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return '';
+        return sel.getRangeAt(0).startContainer.textContent || '';
+    }
+    function replaceLineWith(html) {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        const node = range.startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node.textContent = '';
+        document.execCommand('insertHTML', false, iH4x.sanitize(html));
+    }
+
+    function handleMarkdownShortcut() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        const node = range.startContainer;
+        if (!node || node.nodeType !== Node.TEXT_NODE) return;
+        const text = node.textContent || '';
+        const offset = range.startOffset;
+
+        // Trigger when last char is space
+        if (offset === 0 || text[offset - 1] !== ' ') return;
+        const beforeSpace = text.slice(0, offset - 1);
+
+        const patterns = [
+            { re: /^# $/,   action: () => formatBlockKeepText(node, offset, 'h1') },
+            { re: /^## $/,  action: () => formatBlockKeepText(node, offset, 'h2') },
+            { re: /^### $/, action: () => formatBlockKeepText(node, offset, 'h3') },
+            { re: /^> $/,   action: () => formatBlockKeepText(node, offset, 'blockquote') },
+            { re: /^[-*] $/, action: () => listKeepText(node, offset, 'insertUnorderedList') },
+            { re: /^1\. $/,  action: () => listKeepText(node, offset, 'insertOrderedList') },
+            { re: /^\[\] $/, action: () => { node.textContent = text.slice(offset); insertTodo(); } },
+            { re: /^---$/,   action: () => { /* handled separately */ } },
+        ];
+
+        const candidate = text.slice(0, offset);
+        for (const p of patterns) {
+            if (p.re.test(candidate)) {
+                p.action();
+                return;
+            }
+        }
+    }
+
+    function formatBlockKeepText(node, offset, tag) {
+        const text = node.textContent || '';
+        // Strip the markdown prefix + space
+        const rest = text.slice(offset);
+        node.textContent = rest;
+        document.execCommand('formatBlock', false, tag);
+        // place caret at start of new block
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.setStart(node, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+    function listKeepText(node, offset, command) {
+        const text = node.textContent || '';
+        const rest = text.slice(offset);
+        node.textContent = rest;
+        document.execCommand(command);
+    }
+
+    /* On Enter after `---` line: convert to <hr> */
+    editor.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount) {
+                const node = sel.getRangeAt(0).startContainer;
+                if (node && node.textContent && node.textContent.trim() === '---') {
+                    e.preventDefault();
+                    if (node.nodeType === Node.TEXT_NODE) node.textContent = '';
+                    insertHTMLAtCaret('<hr><p><br></p>');
+                    queueSave();
+                    return;
+                }
+                if (node && node.textContent && node.textContent.trim() === '```') {
+                    e.preventDefault();
+                    if (node.nodeType === Node.TEXT_NODE) node.textContent = '';
+                    insertCodeBlock();
+                    queueSave();
+                    return;
+                }
+            }
+        }
+        if (e.key === 'Escape') { hideSlashMenu(); }
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+        }
+        // Slash menu nav when visible (and focus is in editor)
+        if (slashMenu.classList.contains('visible')) {
+            const items = slashList.querySelectorAll('.menu-item');
+            if (e.key === 'ArrowDown') { e.preventDefault(); activeSlashIdx = Math.min(items.length - 1, activeSlashIdx + 1); refreshActive(items); return; }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); activeSlashIdx = Math.max(0, activeSlashIdx - 1); refreshActive(items); return; }
+            if (e.key === 'Enter')     { e.preventDefault(); const a = items[activeSlashIdx]; if (a) applySlash(a.dataset.action); return; }
+        }
+    });
+
+    /* Hotkeys */
+    iH4x.registerHotkey('mod+s', () => { clearTimeout(saveTimeout); saveNow(); }, { allowInInputs: true });
+    iH4x.registerHotkey('mod+k', () => {
+        const url = prompt('Link URL:');
+        if (url) document.execCommand('createLink', false, url);
+    }, { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+1', () => document.execCommand('formatBlock', false, 'h1'), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+2', () => document.execCommand('formatBlock', false, 'h2'), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+3', () => document.execCommand('formatBlock', false, 'h3'), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+7', () => document.execCommand('insertOrderedList'), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+8', () => document.execCommand('insertUnorderedList'), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+9', () => insertTodo(), { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+p', async () => { meta.pinned = !meta.pinned; refreshToolbar(); await patchMeta({ pinned: meta.pinned }); }, { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+f', async () => { meta.favorite = !meta.favorite; refreshToolbar(); await patchMeta({ favorite: meta.favorite }); }, { allowInInputs: true });
+    iH4x.registerHotkey('mod+/', showShortcuts, { allowInInputs: true });
+    iH4x.registerHotkey('mod+shift+.', () => $('#focusBtn').click(), { allowInInputs: true });
+    iH4x.registerHotkey('mod+e', () => $('#outlineBtn').click(), { allowInInputs: true });
+
+    /* ===== Image upload ===== */
+    imageInput.addEventListener('change', async () => {
+        const f = imageInput.files && imageInput.files[0];
+        imageInput.value = '';
+        if (f) await uploadAndInsert(f);
+    });
+    async function ensureNoteId() {
+        if (currentNoteId) return currentNoteId;
+        await saveNow();
+        return currentNoteId;
+    }
+    async function uploadAndInsert(file) {
+        try {
+            const id = await ensureNoteId();
+            if (!id) throw new Error(iH4x.t('toast.save_first'));
+            setStatus(iH4x.t('status.uploading'), 'saving');
+            const fd = new FormData();
+            fd.append('file', file);
+            const token = (await iH4x.fetchJson('api.php?r=csrf')).csrfToken;
+            const r = await fetch('api.php?action=upload&id=' + encodeURIComponent(id), { method: 'POST', headers: token ? { 'X-CSRF-Token': token } : {}, body: fd });
+            const j = await r.json();
+            if (!r.ok || !j.success) throw new Error(j.error || 'Upload failed.');
+            insertHTMLAtCaret(`<img src="${j.url}" alt="">`);
+            setStatus(iH4x.t('status.saved'));
+            queueSave();
+        } catch (err) {
+            setStatus(iH4x.t('status.error_save'), 'error');
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+    editor.addEventListener('paste', async (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (const it of items) {
+            if (it.kind === 'file' && it.type.startsWith('image/')) {
+                e.preventDefault();
+                const f = it.getAsFile();
+                if (f) await uploadAndInsert(f);
+                return;
+            }
+        }
+        // For HTML paste, sanitize
+        const html = e.clipboardData.getData('text/html');
+        if (html) {
+            e.preventDefault();
+            insertHTMLAtCaret(html);
+            queueSave();
+        }
+    });
+    editor.addEventListener('dragover', (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
+    editor.addEventListener('drop', async (e) => {
+        if (!e.dataTransfer.files || !e.dataTransfer.files.length) return;
+        const f = e.dataTransfer.files[0];
+        if (!f.type.startsWith('image/')) return;
+        e.preventDefault();
+        await uploadAndInsert(f);
+    });
+
+    editor.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href^="app.html#note/"]');
+        if (!link || window.parent === window) return;
+        const id = (link.getAttribute('href') || '').split('#note/')[1];
+        if (!id) return;
+        e.preventDefault();
+        window.parent.postMessage({ type: 'ih4x:open-note', id: decodeURIComponent(id) }, '*');
+    });
+
+    /* ===== Versions ===== */
+    let _lastVersions = [];
+    async function openVersions() {
+        if (!currentNoteId) { iH4x.toast(iH4x.t('toast.save_first'), { type: 'info' }); return; }
+        versionsDrawer.classList.add('visible');
+        try {
+            const r = await iH4x.fetchJson('api.php?action=versions&id=' + encodeURIComponent(currentNoteId));
+            _lastVersions = r.versions || [];
+            renderVersions();
+        } catch (err) { iH4x.toast(err.message, { type: 'error' }); }
+    }
+    function renderVersions() {
+        const list = _lastVersions;
+        const host = $('#versionsList');
+        host.innerHTML = '';
+        if (!list || list.length === 0) {
+            host.innerHTML = '<div class="state-text">' + iH4x.escapeHtml(iH4x.t('versions.empty')) + '</div>';
+            return;
+        }
+        list.forEach(v => {
+            const d = parseTs(v.ts);
+            const el = document.createElement('div');
+            el.className = 'version-item' + (selectedVersionTs === v.ts ? ' active' : '');
+            el.dataset.ts = v.ts;
+            el.innerHTML = `<div class="version-time">${d ? d.toLocaleString() : v.ts}</div><div class="version-rel">${iH4x.relTime(d)}</div>`;
+            el.addEventListener('click', () => previewVersion(v.ts));
+            host.appendChild(el);
+        });
+    }
+    function parseTs(ts) {
+        // ts: YYYYMMDD-HHMMSS-mmm
+        const m = /^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-(\d{3})$/.exec(ts);
+        if (!m) return null;
+        return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6], +m[7]);
+    }
+    async function previewVersion(ts) {
+        selectedVersionTs = ts;
+        $('#versionsList').querySelectorAll('.version-item').forEach(it => it.classList.toggle('active', it.dataset.ts === ts));
+        $('#restoreVersion').disabled = false;
+        try {
+            const r = await iH4x.fetchJson('api.php?action=versions&id=' + encodeURIComponent(currentNoteId) + '&ts=' + encodeURIComponent(ts));
+            const p = $('#versionPreview');
+            p.style.display = '';
+            p.innerHTML = iH4x.sanitize(r.content || '');
+        } catch (err) { iH4x.toast(err.message, { type: 'error' }); }
+    }
+    $('#closeVersions').addEventListener('click', () => versionsDrawer.classList.remove('visible'));
+    $('#cancelVersion').addEventListener('click', () => versionsDrawer.classList.remove('visible'));
+    $('#restoreVersion').addEventListener('click', async () => {
+        if (!selectedVersionTs) return;
+        const ok = await iH4x.confirmModal({ title: iH4x.t('versions.confirm_title'), message: iH4x.t('versions.confirm_msg'), okLabel: iH4x.t('versions.restore') });
+        if (!ok) return;
+        try {
+            const r = await iH4x.fetchJson('api.php?action=restoreVersion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: currentNoteId, ts: selectedVersionTs })
+            });
+            editor.innerHTML = iH4x.sanitize(r.content || '');
+            buildOutline();
+            updateWordCount();
+            applyHighlighting();
+            versionsDrawer.classList.remove('visible');
+            iH4x.toast(iH4x.t('versions.restored'), { type: 'success' });
+        } catch (err) { iH4x.toast(err.message, { type: 'error' }); }
+    });
+
+    /* ===== Highlighting ===== */
+    function applyHighlighting() {
+        if (!window.hljs) return;
+        editor.querySelectorAll('pre code').forEach(b => {
+            try { hljs.highlightElement(b); } catch (_) {}
+        });
+    }
+
+    /* ===== Load ===== */
+    async function loadNote() {
+        if (!currentNoteId) {
+            editor.innerHTML = '';
+            titleInput.value = '';
+            titleInput.placeholder = iH4x.t('toolbar.title_placeholder');
+            isLoaded = true;
+            setStatus(iH4x.t('status.ready'));
+            updateWordCount();
+            buildOutline();
+            isLoaded = true;
+            return;
+        }
+        setStatus(iH4x.t('status.loading'), 'saving');
+        try {
+            const r = await iH4x.fetchJson('api.php?action=get&id=' + encodeURIComponent(currentNoteId));
+            editor.innerHTML = iH4x.sanitize(r.content || '');
+            titleInput.value = r.title || '';
+            const m = r.meta || {};
+            meta.title    = m.title || iH4x.t('toolbar.title_placeholder');
+            meta.tags     = Array.isArray(m.tags) ? m.tags : [];
+            meta.color    = m.color || 'slate';
+            meta.pinned   = !!m.pinned;
+            meta.favorite = !!m.favorite;
+            meta.archived = !!m.archived;
+            meta.updatedAt = m.updatedAt;
+            lastSavedAt = m.updatedAt ? new Date(m.updatedAt) : new Date();
+            refreshToolbar();
+            isLoaded = true;
+            setStatus(iH4x.t('status.saved_rel', { time: iH4x.relTime(lastSavedAt) }));
+            updateWordCount();
+            buildOutline();
+            applyHighlighting();
+            loadBacklinks();
+            loadCurrentUser();
+            if (window.parent !== window && currentNoteId) {
+                window.parent.postMessage({ type: 'ih4x:editor-opened', id: currentNoteId }, '*');
+            }
+        } catch (err) {
+            editor.innerHTML = '';
+            isLoaded = true;
+            setStatus(iH4x.t('status.error_load'), 'error');
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+
+    async function loadCurrentUser() {
+        try {
+            const me = await iH4x.fetchJson('api.php?action=me');
+            currentUser = me.user || null;
+        } catch (_) {
+            currentUser = null;
+        }
+        window.__user = currentUser;
+        if (shareBtn) shareBtn.style.display = currentUser ? '' : 'none';
+    }
+
+    async function loadBacklinks() {
+        if (!currentNoteId) { backlinks.style.display = 'none'; return; }
+        try {
+            const r = await iH4x.fetchJson('api.php?action=note.backlinks&id=' + encodeURIComponent(currentNoteId));
+            const list = r.backlinks || [];
+            if (!list.length) { backlinks.style.display = 'none'; return; }
+            backlinks.style.display = '';
+            backlinksList.innerHTML = list.map((n) => `<a class="internal-note-link" href="app.html#note/${encodeURIComponent(n.id)}">${iH4x.escapeHtml(n.title || iH4x.t('card.untitled'))}</a>`).join('');
+        } catch (_) {
+            backlinks.style.display = 'none';
+        }
+    }
+
+    function renderPresence(list) {
+        const others = (list || []).filter((p) => !window.__user || p.user_id !== window.__user.id);
+        presenceAvatars.innerHTML = others.slice(0, 5).map((p) => `<span class="presence-avatar">${iH4x.escapeHtml((p.display_name || p.username || '?').slice(0, 2).toUpperCase())}</span>`).join('');
+        if (!others.length) {
+            typingLabel.textContent = '';
+        } else if (others.length === 1) {
+            typingLabel.textContent = iH4x.t('presence.typing', { name: others[0].display_name || others[0].username || 'User' });
+        } else {
+            typingLabel.textContent = iH4x.t('presence.n_editing', { n: others.length });
+        }
+    }
+
+    shareBtn?.addEventListener('click', () => {
+        if (!currentNoteId || !window.iH4xSharing) return;
+        iH4xSharing.openPanel(currentNoteId);
+    });
+    remoteReloadBtn?.addEventListener('click', () => {
+        remoteUpdateBanner.classList.remove('visible');
+        loadNote();
+    });
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'ih4x:note-remote-update' && e.data.payload && e.data.payload.entity_id === currentNoteId) {
+            remoteUpdateBanner.classList.add('visible');
+        }
+        if (e.data && e.data.type === 'ih4x:presence-update' && e.data.noteId === currentNoteId) {
+            renderPresence(e.data.presence || []);
+        }
+    });
+
+    document.addEventListener('ih4x:lang', () => {
+        slashItems = getSlashItems();
+        if (slashMenu.classList.contains('visible')) renderSlashList(slashItems);
+        if (versionsDrawer.classList.contains('visible')) renderVersions();
+        updateWordCount();
+        buildOutline();
+        if (lastSavedAt) setStatus(iH4x.t('status.saved_rel', { time: iH4x.relTime(lastSavedAt) }));
+        else if (isLoaded) setStatus(iH4x.t('status.ready'));
+    });
+
+    window.addEventListener('beforeunload', () => clearTimeout(saveTimeout));
+
+    function boot() {
+        refreshToolbar();
+        loadNote();
+    }
+    if (document.readyState !== 'loading') boot();
+    else document.addEventListener('DOMContentLoaded', boot);
+})();
+</script>
+<script src="assets/sharing.js"></script>
+
+</body>
+</html>

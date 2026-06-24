@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iH4x OS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/profile.css">
+    <link rel="stylesheet" href="assets/sharing.css">
+    <link rel="stylesheet" href="assets/presence.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/relativeTime.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/locale/ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+<body class="app-body">
+<button class="sidebar-float-toggle" id="sidebarFloatToggle" data-i18n-attr="title:action.toggle_sidebar,aria-label:action.toggle_sidebar">
+    <i data-lucide="panel-left"></i>
+</button>
+<div class="app-shell" id="appShell">
+    <aside id="sidebar" class="app-sidebar">
+        <div class="logo"><span class="logo-dot"></span><span>iH4x OS</span></div>
+        <div class="sidebar-search">
+            <span class="search-icon"><i data-lucide="search"></i></span>
+            <input type="text" class="search-bar" id="sidebarSearchInput" data-i18n-attr="placeholder:action.search_placeholder,aria-label:action.search_aria">
+        </div>
+
+        <section class="nav-section">
+            <button class="section-toggle" type="button" data-section="smart">
+                <span data-i18n="nav.smart_views">Smart Views</span>
+                <i data-lucide="chevron-down"></i>
+            </button>
+            <nav>
+                <ul id="viewNav">
+                    <li data-view="all" class="active"><span class="nav-icon"><i data-lucide="layout-grid"></i></span><span data-i18n="nav.all">All Notes</span><span class="nav-count" data-count="all">0</span></li>
+                    <li data-view="pinned"><span class="nav-icon"><i data-lucide="pin"></i></span><span data-i18n="nav.pinned">Pinned</span><span class="nav-count" data-count="pinned">0</span></li>
+                    <li data-view="favorites"><span class="nav-icon"><i data-lucide="heart"></i></span><span data-i18n="nav.favorites">Favorites</span><span class="nav-count" data-count="favorites">0</span></li>
+                    <li data-view="archive"><span class="nav-icon"><i data-lucide="archive"></i></span><span data-i18n="nav.archive">Archive</span><span class="nav-count" data-count="archive">0</span></li>
+                    <li data-view="trash"><span class="nav-icon"><i data-lucide="trash-2"></i></span><span data-i18n="nav.trash">Trash</span><span class="nav-count" data-count="trash">0</span></li>
+                    <li data-view="mentions"><span class="nav-icon"><i data-lucide="at-sign"></i></span><span data-i18n="nav.mentions">Mentions</span></li>
+                    <li id="hqNavItem" style="display:none" onclick="location.href='hq.php'"><span class="nav-icon"><i data-lucide="building-2"></i></span><span data-i18n="hq.go_admin">Admin Panel</span></li>
+                </ul>
+                <div class="sidebar-note-tree" id="allNotesTree"></div>
+            </nav>
+        </section>
+        <section class="nav-section" id="sharedSection" style="display:none">
+            <div class="nav-section-title" data-i18n="nav.shared_with_me">Shared with me</div>
+            <div class="sidebar-note-tree" id="sharedTree"></div>
+        </section>
+
+        <section class="nav-section">
+            <div class="section-row">
+                <button class="section-toggle" type="button" data-section="folders">
+                    <span data-i18n="nav.folders">Folders</span>
+                    <i data-lucide="chevron-down"></i>
+                </button>
+                <button class="icon-btn small-icon" id="addFolderBtn" data-i18n-attr="title:action.add_folder,aria-label:action.add_folder"><i data-lucide="folder-plus"></i></button>
+            </div>
+            <div class="folder-tree" id="folderTree"></div>
+        </section>
+
+        <section class="nav-section tags-panel">
+            <div class="nav-section-title" data-i18n="nav.tags">Tags</div>
+            <div class="tag-list" id="tagList">
+                <div class="tag-list-item" style="opacity:.6" data-i18n="nav.no_tags">No tags yet</div>
+            </div>
+        </section>
+
+        <div class="sidebar-footer">
+            <button class="icon-btn" id="themeBtn" data-i18n-attr="title:action.toggle_theme,aria-label:action.toggle_theme"><i data-lucide="sun-moon"></i></button>
+            <button class="icon-btn" id="paletteBtn" data-i18n-attr="title:action.command_palette,aria-label:action.command_palette"><i data-lucide="command"></i></button>
+            <button class="icon-btn" id="settingsBtn" data-i18n-attr="title:action.settings,aria-label:action.settings"><i data-lucide="settings"></i></button>
+            <button class="user-avatar-btn" id="userAvatarBtn" type="button">?</button>
+        </div>
+    </aside>
+
+    <button class="splitter" id="sidebarSplitter" aria-hidden="true"></button>
+
+    <main class="note-list-panel">
+        <header class="topbar app-topbar">
+            <button class="menu-toggle" id="menuToggle" data-i18n-attr="aria-label:action.toggle_sidebar"><i data-lucide="menu"></i></button>
+            <div class="view-heading">
+                <div class="breadcrumbs" id="breadcrumbs"></div>
+                <h1 class="topbar-title" id="viewTitle" data-i18n="nav.all">All Notes</h1>
+                <span class="note-count" id="noteCount">0</span>
+            </div>
+            <div class="search-bar-wrap">
+                <span class="search-icon"><i data-lucide="search"></i></span>
+                <input type="text" class="search-bar" id="searchInput" data-i18n-attr="placeholder:action.search_placeholder,aria-label:action.search_aria">
+                <span class="search-kbd"><kbd>/</kbd></span>
+            </div>
+            <select class="select" id="sortSelect" data-i18n-attr="aria-label:sort.aria">
+                <option value="updated" data-i18n="sort.updated">Updated</option>
+                <option value="created" data-i18n="sort.created">Created</option>
+                <option value="title" data-i18n="sort.title">Title A-Z</option>
+                <option value="length" data-i18n="sort.length">Length</option>
+            </select>
+            <button class="icon-btn" id="langToggle" data-i18n-attr="title:action.toggle_lang,aria-label:action.toggle_lang"><span class="lang-pill" id="langLabel">EN</span></button>
+            <button class="icon-btn" id="viewToggle" data-i18n-attr="title:action.toggle_list,aria-label:action.toggle_list"><i data-lucide="layout-list"></i></button>
+            <button class="btn-new" id="newBtn"><i data-lucide="plus"></i> <span data-i18n="action.new">New Note</span></button>
+        </header>
+        <div class="tag-filter" id="tagFilter"></div>
+        <div id="notesGrid" class="notes-grid app-notes-grid"></div>
+    </main>
+
+    <section class="editor-panel" id="editorPanel">
+        <div class="editor-empty" id="editorEmpty">
+            <div class="empty-state">
+                <h2 data-i18n="empty.title">Nothing here yet</h2>
+                <p data-i18n="empty.desc">Capture a thought, draft a doc, or start a checklist.</p>
+                <button class="btn-new" id="emptyNew"><i data-lucide="plus"></i> <span data-i18n="action.create_here">New note here</span></button>
+            </div>
+        </div>
+        <iframe id="editorFrame" class="editor-frame" title="iH4x Editor"></iframe>
+    </section>
+</div>
+
+<div class="bulk-bar" id="bulkBar" role="region" data-i18n-attr="aria-label:bulk.aria">
+    <span class="bulk-count" id="bulkCount">0 selected</span>
+    <button data-op="move"><i data-lucide="folder-input"></i> <span data-i18n="bulk.move">Move</span></button>
+    <button data-op="favorite"><i data-lucide="heart"></i> <span data-i18n="bulk.favorite">Favorite</span></button>
+    <button data-op="pin"><i data-lucide="pin"></i> <span data-i18n="bulk.pin">Pin</span></button>
+    <button data-op="archive"><i data-lucide="archive"></i> <span data-i18n="bulk.archive">Archive</span></button>
+    <button data-op="restore" id="bulkRestore" style="display:none"><i data-lucide="rotate-ccw"></i> <span data-i18n="bulk.restore">Restore</span></button>
+    <button data-op="trash" class="danger"><i data-lucide="trash-2"></i> <span data-i18n="bulk.trash">Trash</span></button>
+    <button data-op="delete" class="danger" id="bulkHardDelete" style="display:none"><i data-lucide="x"></i> <span data-i18n="bulk.delete">Delete</span></button>
+    <button data-op="clear"><i data-lucide="x"></i></button>
+</div>
+
+<div class="folder-menu" id="folderMenu"></div>
+<aside class="profile-drawer" id="profileDrawer" aria-hidden="true">
+    <div class="profile-head">
+        <h2 data-i18n="profile.title">Profile</h2>
+        <button class="icon-btn" id="closeProfile"><i data-lucide="x"></i></button>
+    </div>
+    <form class="profile-form" id="profileForm">
+        <label><span data-i18n="profile.display_name">Display name</span><input name="display_name" id="profileName"></label>
+        <label><span data-i18n="auth.password">Password</span><input name="password" type="password" id="profilePassword" data-i18n-attr="placeholder:profile.password_hint"></label>
+        <div class="profile-actions">
+            <button type="button" class="btn-ghost" id="profileLang" data-i18n="action.toggle_lang">Toggle language</button>
+            <button type="button" class="btn-ghost" id="logoutBtn" data-i18n="auth.logout">Logout</button>
+            <button class="btn-primary" data-i18n="profile.save">Save</button>
+        </div>
+    </form>
+</aside>
+
+<script>
+(function () {
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const grid = $('#notesGrid');
+    const viewNav = $('#viewNav');
+    const allNotesTree = $('#allNotesTree');
+    const folderTree = $('#folderTree');
+    const tagList = $('#tagList');
+    const tagFilter = $('#tagFilter');
+    const viewTitle = $('#viewTitle');
+    const noteCount = $('#noteCount');
+    const breadcrumbs = $('#breadcrumbs');
+    const editorFrame = $('#editorFrame');
+    const editorEmpty = $('#editorEmpty');
+    const sidebar = $('#sidebar');
+    const appShell = $('#appShell');
+    const folderMenu = $('#folderMenu');
+    const bulkBar = $('#bulkBar');
+    const bulkCount = $('#bulkCount');
+    const langLabel = $('#langLabel');
+
+    const state = {
+        view: 'all',
+        folderId: null,
+        tag: null,
+        q: '',
+        sort: 'updated',
+        listView: localStorage.getItem('ih4x.listView') === '1',
+        notes: [],
+        sidebarNotes: [],
+        folders: [],
+        counts: {},
+        selected: new Set(),
+        collapsed: JSON.parse(localStorage.getItem('ih4x.collapsedFolders') || '{}'),
+        activeNoteId: null,
+        user: null,
+        sharedWithMe: [],
+    };
+    if (state.listView) grid.classList.add('list-view');
+
+    const viewKeys = { all: 'nav.all', pinned: 'nav.pinned', favorites: 'nav.favorites', archive: 'nav.archive', trash: 'nav.trash' };
+    const colors = ['slate', 'rose', 'amber', 'emerald', 'sky', 'violet'];
+
+    function updateLangLabel() {
+        langLabel.textContent = iH4x.getLanguage() === 'ar' ? 'EN' : 'ع';
+    }
+
+    async function loadCurrentUser() {
+        const response = await fetch('api.php?action=me');
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload || payload.success === false) {
+            location.href = payload && payload.code === 'setup_required' ? 'setup.php' : 'login.php';
+            return false;
+        }
+        state.user = payload.user;
+        window.__user = payload.user;
+        renderUserChrome();
+        return true;
+    }
+
+    function renderUserChrome() {
+        const user = state.user || {};
+        $('#userAvatarBtn').textContent = userInitials(user.display_name || user.username || '?');
+        const isAdmin = ['owner', 'admin'].includes(user.role_id);
+        $('#hqNavItem').style.display = isAdmin ? '' : 'none';
+    }
+
+    function userInitials(name) {
+        return String(name || '?').trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+    }
+
+    function flattenFolders(list, depth = 0, out = []) {
+        list.forEach((folder) => {
+            out.push(Object.assign({ depth }, folder));
+            flattenFolders(folder.children || [], depth + 1, out);
+        });
+        return out;
+    }
+
+    function folderById(id, list = state.folders) {
+        for (const folder of list) {
+            if (folder.id === id) return folder;
+            const child = folderById(id, folder.children || []);
+            if (child) return child;
+        }
+        return null;
+    }
+
+    function folderPath(id) {
+        if (!id) return [];
+        const flat = flattenFolders(state.folders);
+        const byId = new Map(flat.map(f => [f.id, f]));
+        const path = [];
+        let cur = byId.get(id);
+        let guard = 0;
+        while (cur && guard++ < 80) {
+            path.unshift(cur);
+            cur = cur.parentId ? byId.get(cur.parentId) : null;
+        }
+        return path;
+    }
+
+    async function loadAll() {
+        await Promise.all([loadNotes(), loadSidebarNotes(), loadTags(), loadSharedWithMe()]);
+        renderFolders();
+    }
+
+    async function loadNotes() {
+        showSkeletons();
+        const params = new URLSearchParams({ action: 'list', view: state.view, sort: state.sort, q: state.q });
+        if (state.folderId) params.set('folder', state.folderId);
+        if (state.tag) params.set('tag', state.tag);
+        const payload = await iH4x.fetchJson('api.php?' + params.toString());
+        state.notes = payload.notes || [];
+        state.counts = payload.counts || {};
+        state.folders = payload.folders || state.folders;
+        updateCounts();
+        renderFolders();
+        renderHeader();
+        renderNotes();
+    }
+
+    async function loadSidebarNotes() {
+        const params = new URLSearchParams({ action: 'list', view: 'all', sort: 'updated', q: state.q });
+        const payload = await iH4x.fetchJson('api.php?' + params.toString());
+        state.sidebarNotes = payload.notes || [];
+        state.counts = payload.counts || state.counts;
+        state.folders = payload.folders || state.folders;
+        updateCounts();
+        renderSidebarNotes();
+        renderFolders();
+    }
+
+    async function loadSharedWithMe() {
+        try {
+            const payload = await iH4x.fetchJson('api.php?action=shared.list');
+            state.sharedWithMe = payload.notes || [];
+            renderSharedWithMe();
+        } catch (_) {
+            state.sharedWithMe = [];
+            renderSharedWithMe();
+        }
+    }
+
+    function renderSharedWithMe() {
+        const host = $('#sharedTree');
+        const section = $('#sharedSection');
+        if (!host || !section) return;
+        section.style.display = state.sharedWithMe.length ? '' : 'none';
+        host.innerHTML = state.sharedWithMe.map((note) => `
+            <button class="sidebar-note-item${note.id === state.activeNoteId ? ' active' : ''}" data-shared-note="${note.id}">
+                <span class="sidebar-note-icon"><i data-lucide="users"></i></span>
+                <span class="sidebar-note-title">${iH4x.escapeHtml(note.title || iH4x.t('card.untitled'))}</span>
+            </button>
+        `).join('');
+    }
+
+    async function loadTags() {
+        try {
+            const payload = await iH4x.fetchJson('api.php?action=tags');
+            const tags = payload.tags || [];
+            renderTags(tags);
+        } catch (_) {}
+    }
+
+    function showSkeletons() {
+        grid.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const s = document.createElement('div');
+            s.className = 'skeleton';
+            grid.appendChild(s);
+        }
+    }
+
+    function updateCounts() {
+        document.querySelectorAll('[data-count]').forEach((el) => {
+            el.textContent = state.counts[el.dataset.count] != null ? state.counts[el.dataset.count] : '0';
+        });
+    }
+
+    function renderHeader() {
+        noteCount.textContent = state.notes.length;
+        breadcrumbs.innerHTML = '';
+        if (state.folderId) {
+            const root = crumb(iH4x.t('nav.root'), null);
+            breadcrumbs.appendChild(root);
+            folderPath(state.folderId).forEach((folder) => breadcrumbs.appendChild(crumb(folder.name, folder.id)));
+            const folder = folderById(state.folderId);
+            viewTitle.removeAttribute('data-i18n');
+            viewTitle.textContent = folder ? folder.name : iH4x.t('nav.folders');
+        } else if (state.tag) {
+            viewTitle.removeAttribute('data-i18n');
+            viewTitle.textContent = '#' + state.tag;
+            breadcrumbs.appendChild(crumb(iH4x.t('nav.tags'), null));
+        } else {
+            const key = viewKeys[state.view] || 'nav.all';
+            viewTitle.setAttribute('data-i18n', key);
+            viewTitle.textContent = iH4x.t(key);
+            breadcrumbs.appendChild(crumb(iH4x.t('nav.root'), null));
+        }
+    }
+
+    function crumb(label, folderId) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.addEventListener('click', () => setFolder(folderId));
+        return btn;
+    }
+
+    function renderTags(tags) {
+        tagList.innerHTML = '';
+        tagFilter.innerHTML = '';
+        if (!tags.length) {
+            tagList.innerHTML = `<div class="tag-list-item" style="opacity:.6" data-i18n="nav.no_tags">${iH4x.escapeHtml(iH4x.t('nav.no_tags'))}</div>`;
+            return;
+        }
+        tags.forEach((tag) => {
+            const item = document.createElement('button');
+            item.className = 'tag-list-item' + (state.tag === tag.name ? ' active' : '');
+            item.innerHTML = `<span class="hash">#</span><span>${iH4x.escapeHtml(tag.name)}</span><span class="count">${tag.count}</span>`;
+            item.addEventListener('click', () => setTag(tag.name));
+            tagList.appendChild(item);
+
+            const chip = document.createElement('button');
+            chip.className = 'tag-chip filter-chip' + (state.tag === tag.name ? ' active' : '');
+            chip.textContent = '#' + tag.name;
+            chip.addEventListener('click', () => setTag(state.tag === tag.name ? null : tag.name));
+            tagFilter.appendChild(chip);
+        });
+    }
+
+    function renderFolders() {
+        folderTree.innerHTML = '';
+        if (!state.folders.length) {
+            const empty = document.createElement('div');
+            empty.className = 'folder-empty';
+            empty.textContent = iH4x.t('nav.no_folders');
+            folderTree.appendChild(empty);
+            return;
+        }
+        state.folders.forEach((folder) => folderTree.appendChild(folderNode(folder, 0)));
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderSidebarNotes() {
+        allNotesTree.innerHTML = '';
+        const unfiled = state.sidebarNotes.filter((note) => !note.folderId && !note.folder_id);
+        if (!unfiled.length) {
+            const empty = document.createElement('div');
+            empty.className = 'sidebar-note-empty';
+            empty.textContent = iH4x.t('empty.title');
+            allNotesTree.appendChild(empty);
+            return;
+        }
+        unfiled.forEach((note) => allNotesTree.appendChild(sidebarNoteItem(note, 1)));
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function notesForFolder(folderId) {
+        return state.sidebarNotes.filter((note) => (note.folderId || note.folder_id) === folderId);
+    }
+
+    function sidebarNoteItem(note, depth) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'sidebar-note-item' + (note.id === state.activeNoteId ? ' active' : '');
+        item.style.setProperty('--depth', depth);
+        item.draggable = !note.deletedAt;
+        item.innerHTML = `
+            <span class="sidebar-note-icon"><i data-lucide="file-text"></i></span>
+            <span class="sidebar-note-title">${iH4x.escapeHtml(note.title || iH4x.t('card.untitled'))}</span>
+            ${note.pinned ? '<span class="sidebar-note-badge"><i data-lucide="pin"></i></span>' : ''}
+        `;
+        item.addEventListener('click', () => openNote(note.id));
+        item.addEventListener('dragstart', (e) => e.dataTransfer.setData('application/x-ih4x-note', note.id));
+        return item;
+    }
+
+    function folderNode(folder, depth) {
+        const wrap = document.createElement('div');
+        wrap.className = 'folder-node';
+        wrap.dataset.id = folder.id;
+
+        const row = document.createElement('div');
+        row.className = 'folder-row color-' + (folder.color || 'slate') + (state.folderId === folder.id ? ' active' : '');
+        row.style.setProperty('--depth', depth);
+        row.draggable = true;
+        row.dataset.folderId = folder.id;
+        const hasChildren = (folder.children || []).length > 0;
+        const collapsed = !!state.collapsed[folder.id];
+        row.innerHTML = `
+            <button class="folder-toggle" ${hasChildren ? '' : 'disabled'} title="${iH4x.escapeHtml(iH4x.t(collapsed ? 'nav.expand' : 'nav.collapse'))}">
+                <i data-lucide="${hasChildren ? (collapsed ? 'chevron-right' : 'chevron-down') : 'minus'}"></i>
+            </button>
+            <span class="folder-icon">${(folder.icon || 'folder') === 'folder' ? '<i data-lucide="folder"></i>' : iH4x.escapeHtml(folder.icon || '')}</span>
+            <span class="folder-name">${iH4x.escapeHtml(folder.name || iH4x.t('nav.untitled_folder'))}</span>
+            <span class="folder-count">${folder.count || 0}</span>
+            <button class="folder-more" title="${iH4x.escapeHtml(iH4x.t('toolbar.more'))}"><i data-lucide="more-horizontal"></i></button>
+        `;
+        row.addEventListener('click', (e) => {
+            if (e.target.closest('.folder-toggle')) {
+                state.collapsed[folder.id] = !state.collapsed[folder.id];
+                localStorage.setItem('ih4x.collapsedFolders', JSON.stringify(state.collapsed));
+                renderFolders();
+                return;
+            }
+            if (e.target.closest('.folder-more')) {
+                showFolderMenu(folder, e);
+                return;
+            }
+            setFolder(folder.id);
+        });
+        row.addEventListener('contextmenu', (e) => showFolderMenu(folder, e));
+        row.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('application/x-ih4x-folder', folder.id);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            const noteId = e.dataTransfer.getData('application/x-ih4x-note');
+            const folderId = e.dataTransfer.getData('application/x-ih4x-folder');
+            if (noteId) await moveNotes([noteId], folder.id);
+            if (folderId && folderId !== folder.id) await moveFolder(folderId, folder.id);
+        });
+        wrap.appendChild(row);
+
+        if (!collapsed && hasChildren) {
+            const children = document.createElement('div');
+            children.className = 'folder-children';
+            folder.children.forEach((child) => children.appendChild(folderNode(child, depth + 1)));
+            wrap.appendChild(children);
+        }
+        if (!collapsed) {
+            notesForFolder(folder.id).forEach((note) => wrap.appendChild(sidebarNoteItem(note, depth + 1)));
+        }
+        return wrap;
+    }
+
+    function renderNotes() {
+        if (!state.notes.length) {
+            grid.innerHTML = `<div class="empty-state"><h2>${iH4x.escapeHtml(iH4x.t(state.q ? 'empty.no_match' : 'empty.title'))}</h2><p>${iH4x.escapeHtml(state.q ? iH4x.t('empty.no_match_q', { q: state.q }) : iH4x.t('empty.desc'))}</p><button class="btn-new" id="emptyListNew"><i data-lucide="plus"></i> ${iH4x.escapeHtml(iH4x.t('empty.cta'))}</button></div>`;
+            $('#emptyListNew')?.addEventListener('click', createNote);
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+        grid.innerHTML = '';
+        state.notes.forEach((note, idx) => grid.appendChild(noteCard(note, idx)));
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function noteCard(note, idx) {
+        const card = document.createElement('article');
+        card.className = 'note-card color-' + (note.color || 'slate') + (note.id === state.activeNoteId ? ' active' : '');
+        card.draggable = !note.deletedAt;
+        card.dataset.id = note.id;
+        if (state.selected.has(note.id)) card.classList.add('selected');
+        card.innerHTML = `
+            <div class="note-card-top">
+                <input type="checkbox" class="note-checkbox" ${state.selected.has(note.id) ? 'checked' : ''}>
+                <h3>${iH4x.escapeHtml(note.title || iH4x.t('card.untitled'))}</h3>
+                <div class="note-badges">${note.pinned ? '<span class="badge-on"><i data-lucide="pin"></i></span>' : ''}${note.favorite ? '<span class="badge-fav"><i data-lucide="heart"></i></span>' : ''}${note.isShared ? '<span class="share-badge"><i data-lucide="users"></i> ' + iH4x.escapeHtml(iH4x.t('share.title')) + '</span>' : ''}</div>
+            </div>
+            <p class="note-snippet">${iH4x.escapeHtml(note.snippet || iH4x.t('card.empty'))}</p>
+            <div class="note-tags">${(note.tags || []).slice(0, 3).map(t => `<span class="tag-chip">#${iH4x.escapeHtml(t)}</span>`).join('')}</div>
+            <div class="note-footer">
+                <span class="note-date">${iH4x.escapeHtml(iH4x.relTime(note.updatedAt) || note.date || '')}</span>
+                <div class="note-actions">
+                    <button data-act="move" title="${iH4x.escapeHtml(iH4x.t('action.move_to_folder'))}"><i data-lucide="folder-input"></i></button>
+                    <button data-act="fav" title="${iH4x.escapeHtml(iH4x.t('toolbar.fav'))}"><i data-lucide="heart"></i></button>
+                    <button data-act="pin" title="${iH4x.escapeHtml(iH4x.t('toolbar.pin'))}"><i data-lucide="pin"></i></button>
+                    <button data-act="${note.deletedAt ? 'restore' : 'trash'}" class="btn-delete"><i data-lucide="${note.deletedAt ? 'rotate-ccw' : 'trash-2'}"></i></button>
+                </div>
+            </div>`;
+        card.querySelector('.note-checkbox').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSelect(note.id, idx, e.shiftKey);
+        });
+        card.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-act]');
+            if (btn) {
+                e.stopPropagation();
+                handleNoteAction(note, btn.dataset.act);
+                return;
+            }
+            if (e.target.closest('input')) return;
+            if (state.selected.size) {
+                toggleSelect(note.id, idx, e.shiftKey);
+                return;
+            }
+            if (note.deletedAt) {
+                iH4x.toast(iH4x.t('toast.cant_edit_trash'), { type: 'info' });
+                return;
+            }
+            openNote(note.id);
+        });
+        card.addEventListener('dragstart', (e) => e.dataTransfer.setData('application/x-ih4x-note', note.id));
+        return card;
+    }
+
+    async function handleNoteAction(note, act) {
+        try {
+            if (act === 'move') {
+                await chooseAndMove([note.id]);
+            } else if (act === 'fav') {
+                await iH4x.fetchJson('api.php?action=patch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: note.id, favorite: !note.favorite }) });
+            } else if (act === 'pin') {
+                await iH4x.fetchJson('api.php?action=patch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: note.id, pinned: !note.pinned }) });
+            } else if (act === 'restore') {
+                await iH4x.fetchJson('api.php?action=restore&id=' + encodeURIComponent(note.id), { method: 'POST' });
+            } else if (act === 'trash') {
+                const ok = await iH4x.confirmModal({ title: iH4x.t('confirm.trash_title'), message: iH4x.t('confirm.trash_msg', { title: note.title || iH4x.t('card.untitled') }), okLabel: iH4x.t('confirm.trash_ok'), danger: true });
+                if (!ok) return;
+                await iH4x.fetchJson('api.php?action=delete&id=' + encodeURIComponent(note.id), { method: 'POST' });
+            }
+            await loadAll();
+        } catch (err) {
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+
+    function toggleSelect(id, idx) {
+        if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+        updateBulkBar();
+        renderNotes();
+    }
+
+    function updateBulkBar() {
+        bulkCount.textContent = iH4x.t('bulk.selected', { n: state.selected.size });
+        bulkBar.classList.toggle('visible', state.selected.size > 0);
+        $('#bulkRestore').style.display = state.view === 'trash' ? '' : 'none';
+        $('#bulkHardDelete').style.display = state.view === 'trash' ? '' : 'none';
+    }
+
+    async function createNote() {
+        try {
+            const payload = await iH4x.fetchJson('api.php?r=notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: iH4x.t('toolbar.title_placeholder'), content: '', folder_id: state.folderId })
+            });
+            await loadAll();
+            openNote(payload.id);
+        } catch (err) {
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+
+    function openNote(id) {
+        state.activeNoteId = id;
+        location.hash = 'note/' + encodeURIComponent(id);
+        editorEmpty.style.display = 'none';
+        editorFrame.style.display = 'block';
+        appShell.classList.add('note-open');
+        editorFrame.src = 'editor.html?id=' + encodeURIComponent(id) + '&embedded=1';
+        renderSidebarNotes();
+        renderFolders();
+        renderNotes();
+    }
+
+    function closeNote() {
+        state.activeNoteId = null;
+        location.hash = '';
+        editorFrame.removeAttribute('src');
+        editorFrame.style.display = 'none';
+        editorEmpty.style.display = '';
+        appShell.classList.remove('note-open');
+        renderSidebarNotes();
+        renderFolders();
+        renderNotes();
+    }
+
+    function setView(view) {
+        state.view = view;
+        state.folderId = null;
+        state.tag = null;
+        state.selected.clear();
+        viewNav.querySelectorAll('li').forEach(li => li.classList.toggle('active', li.dataset.view === view));
+        folderTree.querySelectorAll('.folder-row').forEach(row => row.classList.remove('active'));
+        updateBulkBar();
+        loadAll();
+    }
+
+    function setFolder(folderId) {
+        state.folderId = folderId;
+        state.view = 'all';
+        state.tag = null;
+        state.selected.clear();
+        viewNav.querySelectorAll('li').forEach(li => li.classList.toggle('active', !folderId && li.dataset.view === 'all'));
+        updateBulkBar();
+        loadAll();
+    }
+
+    function setTag(tag) {
+        state.tag = tag;
+        state.folderId = null;
+        state.view = tag ? 'tag' : 'all';
+        loadAll();
+    }
+
+    async function addFolder(parentId = null) {
+        const name = prompt(iH4x.t('common.folder_name'), iH4x.t('nav.untitled_folder'));
+        if (!name) return;
+        const icon = prompt(iH4x.t('common.folder_icon'), 'folder') || 'folder';
+        await iH4x.fetchJson('api.php?r=folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, icon, parent_id: parentId }) });
+        await loadAll();
+    }
+
+    function showFolderMenu(folder, event) {
+        event.preventDefault();
+        folderMenu.innerHTML = `
+            <button data-act="new"><i data-lucide="file-plus"></i>${iH4x.escapeHtml(iH4x.t('action.create_here'))}</button>
+            <button data-act="sub"><i data-lucide="folder-plus"></i>${iH4x.escapeHtml(iH4x.t('action.add_subfolder'))}</button>
+            <button data-act="rename"><i data-lucide="pencil"></i>${iH4x.escapeHtml(iH4x.t('action.rename'))}</button>
+            <button data-act="icon"><i data-lucide="sparkles"></i>${iH4x.escapeHtml(iH4x.t('action.change_icon'))}</button>
+            <button data-act="color"><i data-lucide="palette"></i>${iH4x.escapeHtml(iH4x.t('action.recolor'))}</button>
+            <button data-act="delete" class="danger"><i data-lucide="trash-2"></i>${iH4x.escapeHtml(iH4x.t('action.delete_folder'))}</button>`;
+        folderMenu.style.left = event.clientX + 'px';
+        folderMenu.style.top = event.clientY + 'px';
+        folderMenu.classList.add('visible');
+        folderMenu.onclick = async (e) => {
+            const btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            folderMenu.classList.remove('visible');
+            await folderAction(folder, btn.dataset.act);
+        };
+        if (window.lucide) lucide.createIcons();
+    }
+
+    async function folderAction(folder, act) {
+        try {
+            if (act === 'new') {
+                setFolder(folder.id);
+                await createNote();
+            } else if (act === 'sub') {
+                await addFolder(folder.id);
+            } else if (act === 'rename') {
+                const name = prompt(iH4x.t('common.folder_name'), folder.name);
+                if (name) await updateFolder(folder.id, { name });
+            } else if (act === 'icon') {
+                const icon = prompt(iH4x.t('common.folder_icon'), folder.icon || 'folder');
+                if (icon) await updateFolder(folder.id, { icon });
+            } else if (act === 'color') {
+                const color = prompt(iH4x.t('common.folder_color') + ': ' + colors.join(', '), folder.color || 'slate');
+                if (color) await updateFolder(folder.id, { color });
+            } else if (act === 'delete') {
+                const ok = await iH4x.confirmModal({ title: iH4x.t('action.delete_folder'), message: folder.name, okLabel: iH4x.t('common.delete'), danger: true });
+                if (ok) await iH4x.fetchJson('api.php?r=folders/' + encodeURIComponent(folder.id), { method: 'DELETE' });
+            }
+            await loadAll();
+        } catch (err) {
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    }
+
+    async function updateFolder(id, patch) {
+        await iH4x.fetchJson('api.php?r=folders/' + encodeURIComponent(id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+    }
+
+    async function moveFolder(id, parentId) {
+        await updateFolder(id, { parent_id: parentId });
+        await loadAll();
+    }
+
+    async function moveNotes(ids, folderId) {
+        await iH4x.fetchJson('api.php?r=bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ op: 'move', ids, folder_id: folderId }) });
+        state.selected.clear();
+        await loadAll();
+    }
+
+    async function chooseAndMove(ids) {
+        const flat = flattenFolders(state.folders);
+        const options = [{ id: '', label: iH4x.t('common.none') }].concat(flat.map(f => ({ id: f.id, label: `${'  '.repeat(f.depth)}${f.name}` })));
+        const selected = await folderPicker(options);
+        if (selected !== null) await moveNotes(ids, selected || null);
+    }
+
+    function folderPicker(options) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.innerHTML = `<div class="modal" tabindex="-1"><h3 class="modal-title">${iH4x.escapeHtml(iH4x.t('action.move_to_folder'))}</h3><select class="select folder-select"></select><div class="modal-actions"><button class="btn-ghost" data-act="cancel">${iH4x.escapeHtml(iH4x.t('common.cancel'))}</button><button class="btn-primary" data-act="move">${iH4x.escapeHtml(iH4x.t('common.move'))}</button></div></div>`;
+            const select = overlay.querySelector('select');
+            options.forEach((opt) => {
+                const o = document.createElement('option');
+                o.value = opt.id;
+                o.textContent = opt.label;
+                select.appendChild(o);
+            });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay || e.target.closest('[data-act="cancel"]')) { overlay.remove(); resolve(null); }
+                if (e.target.closest('[data-act="move"]')) { const value = select.value; overlay.remove(); resolve(value); }
+            });
+            document.body.appendChild(overlay);
+            setTimeout(() => select.focus(), 10);
+        });
+    }
+
+    bulkBar.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-op]');
+        if (!btn) return;
+        const op = btn.dataset.op;
+        const ids = Array.from(state.selected);
+        if (op === 'clear') { state.selected.clear(); updateBulkBar(); renderNotes(); return; }
+        if (!ids.length) return;
+        try {
+            if (op === 'move') {
+                await chooseAndMove(ids);
+            } else {
+                await iH4x.fetchJson('api.php?action=bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, op }) });
+                state.selected.clear();
+                await loadAll();
+            }
+        } catch (err) {
+            iH4x.toast(err.message, { type: 'error' });
+        }
+    });
+
+    function openPalette() {
+        const items = [
+            { label: iH4x.t('palette.new_note'), icon: '+', hint: iH4x.t('palette.new_note_hint'), run: createNote },
+            { label: iH4x.t('palette.toggle_theme'), icon: 'T', run: () => iH4x.toggleTheme() },
+            { label: iH4x.t('palette.toggle_lang'), icon: 'A', run: () => iH4x.toggleLanguage() },
+            { label: iH4x.t('palette.open_settings'), icon: 'S', run: () => iH4x.openSettings() },
+            { label: iH4x.t('action.add_folder'), icon: 'F', run: () => addFolder(state.folderId) },
+        ];
+        state.notes.forEach((note) => items.push({ label: iH4x.t('palette.open_note', { title: note.title || iH4x.t('card.untitled') }), icon: 'N', hint: iH4x.relTime(note.updatedAt), run: () => openNote(note.id) }));
+        flattenFolders(state.folders).forEach((folder) => items.push({ label: folder.name, icon: 'F', hint: iH4x.t('nav.folders'), run: () => setFolder(folder.id) }));
+        iH4x.openPalette(items);
+    }
+
+    function bootFromHash() {
+        const m = /^#note\/([a-zA-Z0-9_-]+)$/.exec(location.hash);
+        if (m) openNote(m[1]); else closeNote();
+    }
+
+    $('#newBtn').addEventListener('click', createNote);
+    $('#emptyNew').addEventListener('click', createNote);
+    $('#addFolderBtn').addEventListener('click', () => addFolder(state.folderId));
+    $('#themeBtn').addEventListener('click', () => iH4x.toggleTheme());
+    $('#settingsBtn').addEventListener('click', () => iH4x.openSettings());
+    $('#userAvatarBtn').addEventListener('click', () => {
+        $('#profileName').value = (state.user && state.user.display_name) || '';
+        $('#profilePassword').value = '';
+        $('#profileDrawer').classList.add('visible');
+        if (window.lucide) lucide.createIcons();
+    });
+    $('#closeProfile').addEventListener('click', () => $('#profileDrawer').classList.remove('visible'));
+    $('#profileLang').addEventListener('click', () => iH4x.toggleLanguage());
+    $('#logoutBtn').addEventListener('click', async () => {
+        await iH4x.fetchJson('api.php?action=logout', { method: 'POST' });
+        location.href = 'login.php';
+    });
+    $('#profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = { id: state.user.id, display_name: $('#profileName').value.trim() };
+        if ($('#profilePassword').value) data.password = $('#profilePassword').value;
+        const payload = await iH4x.fetchJson('api.php?action=users.save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        state.user = payload.currentUser || state.user;
+        renderUserChrome();
+        $('#profileDrawer').classList.remove('visible');
+        iH4x.toast(iH4x.t('admin.saved'), { type: 'success' });
+    });
+    $('#paletteBtn').addEventListener('click', openPalette);
+    $('#langToggle').addEventListener('click', () => iH4x.toggleLanguage());
+    $('#viewToggle').addEventListener('click', () => {
+        state.listView = !state.listView;
+        grid.classList.toggle('list-view', state.listView);
+        localStorage.setItem('ih4x.listView', state.listView ? '1' : '0');
+    });
+    function toggleSidebar() {
+        if (window.matchMedia('(max-width: 900px)').matches) {
+            sidebar.classList.toggle('open');
+            sidebar.classList.remove('collapsed');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            sidebar.classList.remove('open');
+        }
+        if (window.lucide) lucide.createIcons();
+    }
+
+    $('#menuToggle').addEventListener('click', toggleSidebar);
+    $('#sidebarFloatToggle').addEventListener('click', toggleSidebar);
+    viewNav.addEventListener('click', (e) => {
+        const li = e.target.closest('li[data-view]');
+        if (li) setView(li.dataset.view);
+    });
+    $('#sharedTree').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-shared-note]');
+        if (!btn) return;
+        openNote(btn.dataset.sharedNote);
+    });
+    $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; loadNotes(); });
+    let searchTimer;
+    $('#searchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { state.q = e.target.value.trim(); loadAll(); }, 220);
+    });
+    $('#sidebarSearchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        state.q = e.target.value.trim();
+        $('#searchInput').value = state.q;
+        searchTimer = setTimeout(loadAll, 220);
+    });
+    document.addEventListener('click', (e) => {
+        if (!folderMenu.contains(e.target)) folderMenu.classList.remove('visible');
+    });
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'ih4x:editor-back') closeNote();
+        if (e.data && e.data.type === 'ih4x:note-saved') loadAll();
+        if (e.data && e.data.type === 'ih4x:open-note' && e.data.id) openNote(String(e.data.id));
+    });
+    editorFrame.addEventListener('load', () => {
+        try {
+            const url = new URL(editorFrame.contentWindow.location.href);
+            const id = url.searchParams.get('id');
+            if (id && id !== state.activeNoteId) {
+                state.activeNoteId = id;
+                history.replaceState({}, '', '#note/' + encodeURIComponent(id));
+                loadAll();
+            }
+        } catch (_) {}
+    });
+    document.addEventListener('ih4x:lang', () => {
+        updateLangLabel();
+        renderHeader();
+        renderFolders();
+        renderNotes();
+        loadTags();
+    });
+    document.addEventListener('ih4x:refresh-notes', () => loadAll());
+    document.addEventListener('ih4x:refresh-folders', () => loadAll());
+    window.addEventListener('hashchange', bootFromHash);
+
+    iH4x.registerHotkey('mod+k', openPalette);
+    iH4x.registerHotkey('/', () => $('#searchInput').focus());
+    iH4x.registerHotkey('mod+shift+n', createNote, { allowInInputs: true });
+    iH4x.registerHotkey('mod+\\', toggleSidebar, { allowInInputs: true });
+    iH4x.registerHotkey('escape', () => { state.selected.clear(); updateBulkBar(); renderNotes(); }, { allowInInputs: true });
+
+    window.addEventListener('load', async () => {
+        updateLangLabel();
+        if (!await loadCurrentUser()) return;
+        await loadAll();
+        bootFromHash();
+        if (window.lucide) lucide.createIcons();
+    });
+})();
+</script>
+<script src="assets/collab.js"></script>
+</body>
+</html>

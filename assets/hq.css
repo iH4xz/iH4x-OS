@@ -1,0 +1,131 @@
+/* hq.css - hq.php only, using Phase 1 variables */
+.hq-page {
+    overflow: hidden;
+}
+.hq-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+}
+.hq-shell:has(.app-sidebar.collapsed) {
+    grid-template-columns: minmax(0, 1fr);
+}
+.hq-content {
+    height: 100vh;
+    overflow: auto;
+    padding: 30px;
+}
+.hq-header {
+    margin-bottom: 22px;
+}
+.hq-header h1 {
+    font-size: 1.7rem;
+    margin-bottom: 4px;
+}
+.hq-header p {
+    color: var(--text-soft);
+}
+.hq-widgets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+.hq-card {
+    min-height: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    padding: 18px;
+}
+.hq-card-title {
+    font-size: 1rem;
+    margin-bottom: 14px;
+    color: var(--text);
+}
+.presence-list,
+.activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 290px;
+    overflow: auto;
+}
+.presence-row,
+.activity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-2);
+}
+.presence-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 12px var(--success);
+}
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 800;
+    flex: 0 0 auto;
+}
+.presence-name,
+.activity-main {
+    flex: 1;
+    min-width: 0;
+}
+.presence-name small,
+.activity-main small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-soft);
+}
+.storage-total {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 8px 0 16px;
+}
+.storage-bar {
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+}
+.storage-seg-db,
+.storage-seg-att {
+    height: 100%;
+    float: left;
+}
+.storage-seg-db {
+    background: var(--primary);
+}
+.storage-seg-att {
+    background: var(--success);
+}
+.storage-legend {
+    margin-top: 12px;
+    color: var(--text-dim);
+    display: grid;
+    gap: 8px;
+}
+@media (max-width: 1000px) {
+    .hq-widgets {
+        grid-template-columns: 1fr;
+    }
+}
+[dir="rtl"] .presence-row,
+[dir="rtl"] .activity-row {
+    flex-direction: row-reverse;
+}

@@ -1,0 +1,25 @@
+# User specific configuration
+config.php
+settings.json
+
+# Local data & databases
+data/
+notes/
+trash/
+versions/
+uploads/
+metadata.json
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

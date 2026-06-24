@@ -1,0 +1,50 @@
+# iH4x OS — Root .htaccess
+# Deny direct access to sensitive directories and files
+
+# Protect data directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block direct access to data directory (SQLite DB, logs)
+    RewriteRule ^data/ - [F,L]
+
+    # Block direct access to notes, trash, versions storage
+    RewriteRule ^notes/ - [F,L]
+    RewriteRule ^trash/ - [F,L]
+    RewriteRule ^versions/ - [F,L]
+
+    # Block direct access to lib directory
+    RewriteRule ^lib/ - [F,L]
+
+    # Block direct access to config files
+    RewriteRule ^config\.php$ - [F,L]
+    RewriteRule ^config\.sample\.php$ - [F,L]
+
+    # Block access to hidden files (except .htaccess itself)
+    RewriteRule (^|/)\.(?!htaccess) - [F,L]
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Block access to sensitive file types
+<FilesMatch "\.(sqlite|sqlite3|db|log|json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Allow settings.json to be accessed by PHP (internal only)
+# The FilesMatch above blocks direct browser access

@@ -1,0 +1,219 @@
+/* admin.css - admin.php only, extends Phase 1 variables */
+.admin-page {
+    overflow: hidden;
+}
+.admin-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+}
+.admin-shell:has(.app-sidebar.collapsed) {
+    grid-template-columns: minmax(0, 1fr);
+}
+.admin-content {
+    min-width: 0;
+    height: 100vh;
+    overflow: auto;
+    padding: 30px;
+}
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.admin-header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+}
+.admin-header p {
+    color: var(--text-soft);
+}
+.admin-panel {
+    display: none;
+}
+.admin-panel.active {
+    display: block;
+}
+.table-wrap,
+.role-card,
+.settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+    overflow: hidden;
+}
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.user-table th,
+.user-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: start;
+}
+.user-table th {
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 800;
+}
+.user-meta small {
+    display: block;
+    color: var(--text-soft);
+    margin-top: 2px;
+}
+.role-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 0.78rem;
+}
+.status-badge.active {
+    color: var(--success);
+}
+.status-badge.inactive {
+    color: var(--danger);
+}
+.row-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+.mini-btn {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    padding: 6px 9px;
+    cursor: pointer;
+}
+.mini-btn:hover {
+    color: var(--text);
+    background: var(--surface-3);
+}
+.role-card {
+    padding: 16px;
+    margin-bottom: 14px;
+}
+.role-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.role-head input,
+.settings-card input,
+.settings-card select,
+.side-panel input,
+.side-panel select {
+    min-height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 7px 10px;
+}
+.perm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+.perm-group {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--surface-2);
+}
+.perm-group-title {
+    color: var(--text-soft);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+}
+.perm-row,
+.settings-row,
+.override-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+}
+.settings-card {
+    padding: 18px;
+    max-width: 620px;
+}
+.side-panel {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: min(460px, 94vw);
+    background: var(--surface);
+    border-inline-start: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 220;
+    padding: 20px;
+    overflow: auto;
+}
+.side-panel.visible {
+    transform: translateX(0);
+}
+.panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.panel-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.panel-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+[dir="rtl"] .admin-shell {
+    direction: rtl;
+}
+[dir="rtl"] .side-panel {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    transform: translateX(-100%);
+    border-inline-start: 0;
+    border-inline-end: 1px solid var(--border);
+}
+[dir="rtl"] .side-panel.visible {
+    transform: translateX(0);
+}
