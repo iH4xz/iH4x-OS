@@ -1199,6 +1199,7 @@
             }
             
             input.style.paddingInlineEnd = '38px';
+            input.style.width = '100%';
             
             const btn = document.createElement('button');
             btn.type = 'button';
