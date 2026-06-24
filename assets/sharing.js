@@ -57,12 +57,37 @@
         } else {
             base = (location.origin + location.pathname.replace(/[^/]+$/, '')).replace(/\/+$/, '');
         }
+        let lanBase = payload.lanBaseUrl;
+        if (lanBase) {
+            lanBase = lanBase.replace(/\/+$/, '');
+        } else {
+            lanBase = base;
+        }
         const linkUrl = linkToken ? (base + '/login.php?share=' + encodeURIComponent(linkToken)) : '';
-        document.getElementById('shareLink').innerHTML = `
+        const lanLinkUrl = linkToken ? (lanBase + '/login.php?share=' + encodeURIComponent(linkToken)) : '';
+        
+        let shareHtml = `
             <label class="collaborator-row"><input type="checkbox" id="shareEnableLink" ${linkToken ? 'checked' : ''}> ${esc(iH4x.t('share.enable_link'))}</label>
-            <div class="share-link-row"><input id="shareLinkInput" value="${esc(linkUrl)}" readonly><button class="btn-ghost" id="copyShareLink">${esc(iH4x.t('share.copy_link'))}</button></div>`;
+        `;
+        if (linkToken) {
+            shareHtml += `
+                <div class="share-link-field" style="margin-top: 8px;">
+                    <span class="share-field-label" data-i18n="share.current_link">${esc(iH4x.t('share.current_link'))}</span>
+                    <div class="share-link-row"><input id="shareLinkInput" value="${esc(linkUrl)}" readonly><button class="btn-ghost" id="copyShareLink">${esc(iH4x.t('share.copy_link'))}</button></div>
+                </div>
+                <div class="share-link-field" style="margin-top: 14px;">
+                    <span class="share-field-label" data-i18n="share.lan_link">${esc(iH4x.t('share.lan_link'))}</span>
+                    <div class="share-link-row"><input id="shareLanLinkInput" value="${esc(lanLinkUrl)}" readonly><button class="btn-ghost" id="copyShareLanLink">${esc(iH4x.t('share.copy_link'))}</button></div>
+                </div>
+            `;
+        } else {
+            shareHtml += `
+                <div class="share-link-row"><input value="" readonly disabled placeholder="Enable link to share..."></div>
+            `;
+        }
+        document.getElementById('shareLink').innerHTML = shareHtml;
         if (window.lucide) lucide.createIcons();
-
+ 
         document.getElementById('sharePeople').onclick = async (e) => {
             const row = e.target.closest('.collaborator-row');
             if (!row) return;
@@ -84,11 +109,18 @@
             await iH4x.fetchJson('api.php?action=share.save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note_id: noteId, enable_link: e.target.checked ? 1 : 0 }) });
             render(noteId);
         };
-        document.getElementById('copyShareLink').onclick = async () => {
-            const input = document.getElementById('shareLinkInput');
-            await navigator.clipboard.writeText(input.value || '');
-            iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
-        };
+        if (linkToken) {
+            document.getElementById('copyShareLink').onclick = async () => {
+                const input = document.getElementById('shareLinkInput');
+                await navigator.clipboard.writeText(input.value || '');
+                iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+            };
+            document.getElementById('copyShareLanLink').onclick = async () => {
+                const input = document.getElementById('shareLanLinkInput');
+                await navigator.clipboard.writeText(input.value || '');
+                iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+            };
+        }
     }
 
     async function openPanel(noteId) {

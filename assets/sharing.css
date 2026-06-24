@@ -74,3 +74,13 @@
     gap: 6px;
 }
 
+
+.share-field-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}

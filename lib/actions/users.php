@@ -132,24 +132,50 @@ function baseUrl(): string
 {
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : ((($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http');
     $host = (string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? '');
+    $script = str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/')));
+    $script = rtrim($script, '/');
+    return $scheme . '://' . $host . ($script !== '' ? $script : '');
+}
+
+function getSystemLocalIP(): string
+{
+    $ip = gethostbyname(gethostname());
+    if ($ip !== '127.0.0.1' && $ip !== '::1' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return $ip;
+    }
     
-    $hostname = parse_url($scheme . '://' . $host, PHP_URL_HOST);
-    if ($hostname === 'localhost' || $hostname === '127.0.0.1' || $hostname === '::1' || $hostname === '') {
-        $lanIp = gethostbyname(gethostname());
-        if ($lanIp !== '127.0.0.1' && $lanIp !== '::1' && filter_var($lanIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $port = (int) ($_SERVER['SERVER_PORT'] ?? 80);
-            $default = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
-            $host = $lanIp . ($default ? '' : ':' . $port);
-        } else {
-            $addr = (string) ($_SERVER['SERVER_ADDR'] ?? $lanIp);
-            if ($addr !== '') {
-                $port = (int) ($_SERVER['SERVER_PORT'] ?? 80);
-                $default = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
-                $host = $addr . ($default ? '' : ':' . $port);
+    if (stristr(PHP_OS, 'WIN')) {
+        @exec('ipconfig', $lines);
+        foreach ($lines as $line) {
+            if (preg_match('/IPv4 Address[\.\s]+:\s*([0-9\.]+)/i', $line, $m)) {
+                $candidate = trim($m[1]);
+                if ($candidate !== '127.0.0.1' && $candidate !== '') {
+                    if (str_starts_with($candidate, '192.168.') || str_starts_with($candidate, '10.')) {
+                        return $candidate;
+                    }
+                    $ip = $candidate;
+                }
+            }
+        }
+    } else {
+        @exec('hostname -I', $lines);
+        if (!empty($lines)) {
+            $parts = explode(' ', trim($lines[0]));
+            if (!empty($parts[0]) && filter_var($parts[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                return $parts[0];
             }
         }
     }
-    
+    return $ip ?: '127.0.0.1';
+}
+
+function lanBaseUrl(): string
+{
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : ((($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http');
+    $lanIp = getSystemLocalIP();
+    $port = (int) ($_SERVER['SERVER_PORT'] ?? 80);
+    $default = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
+    $host = $lanIp . ($default ? '' : ':' . $port);
     $script = str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/')));
     $script = rtrim($script, '/');
     return $scheme . '://' . $host . ($script !== '' ? $script : '');
