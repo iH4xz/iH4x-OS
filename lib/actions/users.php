@@ -132,14 +132,24 @@ function baseUrl(): string
 {
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : ((($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http');
     $host = (string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? '');
-    if ($host === '' || preg_match('/^(localhost|127\.0\.0\.1)(:\d+)?$/i', $host)) {
-        $addr = (string) ($_SERVER['SERVER_ADDR'] ?? gethostbyname(gethostname()));
-        if ($addr !== '') {
+    
+    $hostname = parse_url($scheme . '://' . $host, PHP_URL_HOST);
+    if ($hostname === 'localhost' || $hostname === '127.0.0.1' || $hostname === '::1' || $hostname === '') {
+        $lanIp = gethostbyname(gethostname());
+        if ($lanIp !== '127.0.0.1' && $lanIp !== '::1' && filter_var($lanIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $port = (int) ($_SERVER['SERVER_PORT'] ?? 80);
             $default = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
-            $host = $addr . ($default ? '' : ':' . $port);
+            $host = $lanIp . ($default ? '' : ':' . $port);
+        } else {
+            $addr = (string) ($_SERVER['SERVER_ADDR'] ?? $lanIp);
+            if ($addr !== '') {
+                $port = (int) ($_SERVER['SERVER_PORT'] ?? 80);
+                $default = ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
+                $host = $addr . ($default ? '' : ':' . $port);
+            }
         }
     }
+    
     $script = str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/')));
     $script = rtrim($script, '/');
     return $scheme . '://' . $host . ($script !== '' ? $script : '');
