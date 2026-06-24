@@ -110,8 +110,12 @@ function usersResetLink(PDO $pdo, array $data): array
     $pdo->prepare('INSERT INTO reset_tokens(id, user_id, token, expires_at) VALUES (?, ?, ?, ?)')->execute([bin2hex(random_bytes(8)), $id, $token, date('c', time() + 86400)]);
     $base = rtrim((string) (defined('APP_URL') ? APP_URL : ''), '/');
     $url = ($base !== '' ? $base . '/' : '') . 'login.php?reset=' . rawurlencode($token);
+    
+    $lanBase = lanBaseUrl();
+    $lanUrl = rtrim($lanBase, '/') . '/login.php?reset=' . rawurlencode($token);
+    
     Auth::writeLog('user.reset_link', 'user', $id, []);
-    return ['resetLink' => $url];
+    return ['resetLink' => $url, 'lanResetLink' => $lanUrl];
 }
 
 function usersInvite(PDO $pdo, array $data): array
@@ -125,7 +129,15 @@ function usersInvite(PDO $pdo, array $data): array
     $pdo->prepare('INSERT INTO invite_tokens(id, token, role_id, email, display_name, created_by, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         ->execute([bin2hex(random_bytes(8)), $token, $roleId, $email, $displayName, (string) (Auth::$user['id'] ?? ''), $expires, date('c')]);
     Auth::writeLog('user.invited', 'invite', $token, ['role' => $roleId, 'email' => $email]);
-    return ['inviteLink' => baseUrl() . '/login.php?invite=' . rawurlencode($token), 'expiresAt' => $expires];
+    
+    $inviteLink = baseUrl() . '/login.php?invite=' . rawurlencode($token);
+    $lanInviteLink = lanBaseUrl() . '/login.php?invite=' . rawurlencode($token);
+    
+    return [
+        'inviteLink' => $inviteLink,
+        'lanInviteLink' => $lanInviteLink,
+        'expiresAt' => $expires
+    ];
 }
 
 function baseUrl(): string

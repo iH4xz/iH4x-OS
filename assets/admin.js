@@ -83,6 +83,61 @@
         if (window.lucide) lucide.createIcons();
     }
 
+    function openInvite() {
+        const panel = $('#detailPanel');
+        const roleOptions = roles.map(r => `<option value="${r.id}">${iH4x.escapeHtml(r.name)}</option>`).join('');
+        panel.innerHTML = `
+            <div class="panel-head"><h2>${iH4x.escapeHtml(iH4x.t('admin.invite'))}</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+            <form class="panel-form" id="inviteForm">
+                <label>${iH4x.t('admin.roles')}<select name="role_id">${roleOptions}</select></label>
+                <label>Display name (optional)<input name="display_name" value="" placeholder="e.g. John Doe"></label>
+                <label>Email (optional)<input name="email" type="email" value="" placeholder="e.g. john@example.com"></label>
+                <div class="panel-actions"><button type="button" class="btn-ghost" data-close>${iH4x.t('common.cancel')}</button><button class="btn-primary" type="submit">Generate Invite Links</button></div>
+            </form>
+            <div id="inviteLinksResult" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+                <div class="share-link-field">
+                    <span class="share-field-label">Current URL Invite Link</span>
+                    <div class="share-link-row"><input id="inviteLinkInput" readonly><button type="button" class="btn-ghost" id="copyInviteLink">${iH4x.t('share.copy_link')}</button></div>
+                </div>
+                <div class="share-link-field" style="margin-top:14px;">
+                    <span class="share-field-label">Local LAN IP Invite Link</span>
+                    <div class="share-link-row"><input id="lanInviteLinkInput" readonly><button type="button" class="btn-ghost" id="copyLanInviteLink">${iH4x.t('share.copy_link')}</button></div>
+                </div>
+            </div>`;
+        panel.classList.add('visible');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function openResetLinks(user, r) {
+        const panel = $('#detailPanel');
+        panel.innerHTML = `
+            <div class="panel-head"><h2>${iH4x.escapeHtml(iH4x.t('admin.reset_link'))} - ${iH4x.escapeHtml(user.display_name)}</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+            <div class="panel-form" style="margin-top:20px;">
+                <div class="share-link-field">
+                    <span class="share-field-label">Current URL Reset Link</span>
+                    <div class="share-link-row"><input id="resetLinkInput" value="${iH4x.escapeHtml(r.resetLink)}" readonly><button type="button" class="btn-ghost" id="copyResetLink">${iH4x.t('share.copy_link')}</button></div>
+                </div>
+                <div class="share-link-field" style="margin-top:14px;">
+                    <span class="share-field-label">Local LAN IP Reset Link</span>
+                    <div class="share-link-row"><input id="lanResetLinkInput" value="${iH4x.escapeHtml(r.lanResetLink)}" readonly><button type="button" class="btn-ghost" id="copyLanResetLink">${iH4x.t('share.copy_link')}</button></div>
+                </div>
+                <div class="panel-actions" style="margin-top:24px;"><button type="button" class="btn-primary" data-close>Done</button></div>
+            </div>`;
+        panel.classList.add('visible');
+        if (window.lucide) lucide.createIcons();
+        
+        document.getElementById('copyResetLink').onclick = async () => {
+            const input = document.getElementById('resetLinkInput');
+            await navigator.clipboard.writeText(input.value || '');
+            iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+        };
+        document.getElementById('copyLanResetLink').onclick = async () => {
+            const input = document.getElementById('lanResetLinkInput');
+            await navigator.clipboard.writeText(input.value || '');
+            iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+        };
+    }
+
     document.addEventListener('click', async (e) => {
         const tab = e.target.closest('#adminNav [data-tab]');
         if (tab) {
@@ -90,15 +145,7 @@
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab));
         }
         if (e.target.closest('#inviteBtn')) {
-            const role = prompt(iH4x.t('admin.roles') + ' (owner/admin/editor/viewer)', 'editor') || 'editor';
-            const email = prompt('Email (optional)', '') || '';
-            const display = prompt('Display name (optional)', '') || '';
-            const r = await iH4x.fetchJson('api.php?action=users.invite', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role_id: role, email, display_name: display })
-            });
-            prompt(iH4x.t('admin.invite'), r.inviteLink);
+            openInvite();
         }
         if (e.target.closest('[data-close]')) $('#detailPanel').classList.remove('visible');
         const action = e.target.closest('[data-act]');
@@ -111,7 +158,7 @@
             }
             if (action.dataset.act === 'reset' && user) {
                 const r = await iH4x.fetchJson('api.php?action=users.reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: user.id }) });
-                prompt(iH4x.t('admin.reset_link'), r.resetLink);
+                openResetLinks(user, r);
             }
             if (action.dataset.act === 'save-role') {
                 const card = action.closest('.role-card');
@@ -132,6 +179,32 @@
     });
 
     document.addEventListener('submit', async (e) => {
+        if (e.target.id === 'inviteForm') {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            const r = await iH4x.fetchJson('api.php?action=users.invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (r && r.inviteLink) {
+                $('#inviteLinkInput').value = r.inviteLink;
+                $('#lanInviteLinkInput').value = r.lanInviteLink || r.inviteLink;
+                $('#inviteLinksResult').style.display = 'block';
+                
+                document.getElementById('copyInviteLink').onclick = async () => {
+                    const input = document.getElementById('inviteLinkInput');
+                    await navigator.clipboard.writeText(input.value || '');
+                    iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+                };
+                document.getElementById('copyLanInviteLink').onclick = async () => {
+                    const input = document.getElementById('lanInviteLinkInput');
+                    await navigator.clipboard.writeText(input.value || '');
+                    iH4x.toast(iH4x.t('share.link_copied'), { type: 'success' });
+                };
+            }
+            return;
+        }
         if (e.target.id !== 'userForm') return;
         e.preventDefault();
         const data = Object.fromEntries(new FormData(e.target).entries());
