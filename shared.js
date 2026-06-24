@@ -1187,7 +1187,7 @@
             
             let wrap = input.parentNode;
             if (!wrap.classList.contains('password-input-wrap')) {
-                wrap = document.createElement('div');
+                wrap = document.createElement('span');
                 wrap.className = 'password-input-wrap';
                 wrap.style.position = 'relative';
                 wrap.style.display = 'flex';

@@ -46,6 +46,14 @@
     flex-direction: column;
     gap: 6px;
     color: var(--text-dim);
+    width: 100%;
+}
+.profile-form .password-input-wrap {
+    width: 100%;
+    display: flex;
+}
+.profile-form .password-input-wrap input {
+    width: 100%;
 }
 .profile-form input {
     min-height: 40px;

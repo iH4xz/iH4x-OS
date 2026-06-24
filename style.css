@@ -1958,3 +1958,15 @@ body:has(.app-sidebar.collapsed) .sidebar-float-toggle {
         display: block;
     }
 }
+
+/* Helper class for password visibility toggles */
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.password-input-wrap input {
+    width: 100%;
+}
+
